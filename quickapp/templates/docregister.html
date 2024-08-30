@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        div{
+            height: fit-content;
+            width: 500px;
+            border: 1px solid black;
+            margin: auto;
+            background-color:beige;
+        } 
+        #pine{
+            display: flex;
+            flex-direction: column;
+            margin: 3% auto ;
+            font-size: larger;
+            background-color: #4CAF50;
+            color: aliceblue;
+        }
+        label{
+            margin-left: 10px;
+        }
+        body{
+            background-color: plum;
+        }
+       
+        
+    
+    </style>  
+</head>
+<body>
+    <div>
+    <form action="/docreg/" method="POST">
+        {% csrf_token %}
+    <u><h1 style="text-align: center;">Doctor Registration Form</h1><br><br></u>
+    <label for="">First Name :</label>
+    <input type="text" placeholder="Enter your First Name " name="fname"><br><br>
+    <label for="">Last Name :</label>
+    <input type="text" placeholder="Enter your Last Name " name="lname"><br><br>
+    
+        
+    <label for="gender">Gender :</label>
+    <input type="radio" id="male" name="gender" value="male">
+    <label for="male">Male</label>
+    <input type="radio" id="female" name="gender" value="female">
+    <label for="female">Female</label>
+    <input type="radio" id="other" name="gender" value="other">
+    <label for="other">Other</label><br><br>
+
+    <label for="">E-mail :</label>
+    <input type="email" name="email" id="" placeholder="Enter your email Id "> <br><br>
+    <label for="">Mobile No :</label>
+    <input type="number" placeholder="Enter your Contact number" name="mobile"><br><br>
+    <label for="">License No :</label>
+    <input type="number" placeholder="Enter your License No" name=""><br><br>
+    
+        <label for="">Specialization :</label>
+    <select name="spec" id="">
+        <option value="">---</option>
+        <option value="General Surgeon">General Surgeon</option>
+        <option value="Cardiologists">Cardiologists</option>
+        <option value="Neurologists">Neurologists</option>
+        <option value="Dentist">Dentist</option>
+        <option value="Orthopedic">Orthopedic</option>
+        <option value="Dermatologists">Dermatologists</option>
+        <option value="Ophthalmologist">Ophthalmologist</option>
+        <option value="Gynecologist">Gynecologist</option>
+        <option value="Pediatrician">Pediatrician</option>
+        <option value="Oncologist">Oncologist</option>
+        <option value="Physiatrists">Physiatrists</option>
+        <option value="General Medicine">General Medicine</option>
+    </select><br><br>
+        <label for="">Hospital Name :</label>
+    <select name="hop" id="">
+        <option value="">----</option>
+        <option value="Apolo">Apollo</option>
+        <option value="KIMS">KIMS</option>
+        <option value="Medicover">Medicover</option>
+        <option value="Lotus">Lotus</option>
+        <option value="Vijaya">Vijaya</option>
+        <option value="Rainbow">Rainbow </option>
+        <option value="BLK">BLK</option>
+        <option value="Narayana">Narayana</option>
+    </select><br><br>
+    <label for="">Address :</label>
+    <textarea name="address" id="" placeholder="Enter your Address"></textarea><br><br>
+        <label for=""> Consultation Fee :</label>
+    <select name="price" id="">
+        <option value="">----</option>
+        <option value="">300</option>
+        <option value="">400</option>
+        <option value="">500</option>
+        <option value="">Above 500</option>
+    </select><br><br>
+    <label for="password">Create Password :</label>
+    <input type="password" name="password" id="" value="">
+    <br><br>
+    <button id="pine" type="submit">Submit</button>
+    </form>
+    </div>
+</body>
+</html>
