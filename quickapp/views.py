@@ -5,6 +5,15 @@ from .models import *
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+
+import random
+import smtplib
+from email.message import EmailMessage
+
+
+
+
+
 # Create your views here.
 def home(request):
     return render(request , 'home.html')
@@ -54,7 +63,7 @@ def usr_log_session(request):
     doc= Doctor_data.objects.all()
     username = request.session['usr']
     usr=usrData.objects.get(username=username)
-    return render(request,'usrp.html',{'user':usr,'doc':doc})
+    return render(request,'usrp.html',{'user':usr,'docd':doc})
 
 
 
@@ -126,12 +135,26 @@ def usr_appointments(request):
         problem = request.POST['problem']
         appointment = user_appointment(demail=demail,pname=pname,day=date,time=time,gender=gender,problem=problem,page=page,pusername=pusername)
         appointment.save()
+        email=usr.email
+        server = smtplib.SMTP('smtp.gmail.com',587)
+        server.starttls()
+        server.login('bashamasthan31@gmail.com','teqi qyea ovhm unek')
+        msg = EmailMessage()
+        msg['From'] = 'Quick Info '
+        msg['Subject'] = 'About Your Booking Status'
+        msg.set_content("Successfully placed your OP \n Thank you for Choosing Our Platform to Improve Your Health \n You will Receive an Conformation Mail from Doctor Shortly..")
+        msg['To'] = email
+        server.send_message(msg)
         return redirect('/user_home/')
     doc = Doctor_data.objects.all()
     return render(request,'user_appointment.html',{'doc':doc})
 
 
+def cmsg(request):
+    if request.method == 'POST':
+        msg = request.POST['msg']
 
+    return redirect('/dochome/')
 
 
 def logout_view(request):

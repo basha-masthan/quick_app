@@ -31,6 +31,7 @@ urlpatterns = [
     path('docreg/',dodocreg  ,name="dodocreg" ),
     path('doclogin/',doclogin  ,name="doclogin" ),
     path('dochome/',dochome),
+    path('cmsg/',cmsg),
     path("docgetdata/",docget_data , name="data"),
     path('logout/',logout_view),
 ]

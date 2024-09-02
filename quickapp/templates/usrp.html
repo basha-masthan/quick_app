@@ -47,7 +47,7 @@
         </tr>
       </thead>
       <tbody>
-        {% for doc in doc %}
+        {% for doc in docd %}
           
         <tr>
           <td>{{doc.fname}} {{doc.lname}} </td>
@@ -73,6 +73,16 @@
                 <div class="modal-body">
                   <form action="/usr_appointments/" method="POST">
                   {% csrf_token %}
+                  <label for="">Choose Dr:</label>
+                  <select name="demail" id="">
+                    <option value="0">Choose a Doctor</option>
+                    {% for docc in docd %}
+                      
+                    <option value="{{docc.email}}">{{docc.fname}} {{docc.lname}} </option>
+                    {% endfor %}
+                  
+                  </select>
+                  <br><br>
                   <label for="gender">Gender :</label>
                   <input type="radio" id="male" name="gender" value="male">
                   <label for="male">Male</label>
@@ -105,7 +115,6 @@
                   </div>
                   <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <input type="hidden" name="demail" id="" value="{{doc.email}}">
                     <input type="hidden" name="pusername" id="" value="{{user.username}}">
                     <input type="submit" class="btn btn-primary" name="" id="" value="Submit">
                   </div>

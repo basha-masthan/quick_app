@@ -72,18 +72,23 @@
                             </div>
                             <div class="modal-body">
 
+                                {% for i in apo %}
+                                {% if i.pname == usrs.pname %}
+                                  
                                 <h4>Patient Name: {{usrs.pname}}</h4>
+                                {% endif %}
+                                {% endfor %}
                                 
 
-                                <form>
-                                    
+                                <form action="/cmsg/" method="post"> 
+                                    {% csrf_token %}
                                     <div class="form-group">
                                         <label for="message-text" class="col-form-label">Message:</label>
-                                        <textarea class="form-control" id="message-text" value="message"></textarea>
+                                        <textarea class="form-control" name="msg" id="message-text" value="message"></textarea>
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                        <button type="button" class="btn btn-primary">Send message</button>
+                                        <input type="submit" name="" class="btn btn-primary" value="Submit" id="">
                                     </div>
                                 </form>
                             </div>

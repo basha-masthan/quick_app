@@ -23,7 +23,7 @@ class usrData(models.Model):
 
 
 class user_appointment(models.Model):
-    pusername=models.CharField(max_length=20)
+    pusername=models.CharField(max_length=20,unique=True)
     gender = models.CharField(max_length=20)
     demail = models.EmailField(max_length=30)
     pname=models.CharField(max_length=30)
