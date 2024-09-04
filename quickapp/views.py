@@ -125,6 +125,8 @@ def usr_appointments(request):
     username = request.session['usr']
     usr=usrData.objects.get(username=username)
     pname=usr.name
+    mob=usr.mobile
+    # str(mob)
     if request.method == 'POST':
         page=request.POST['page']
         date = request.POST['date']
@@ -141,10 +143,26 @@ def usr_appointments(request):
         server.login('bashamasthan31@gmail.com','teqi qyea ovhm unek')
         msg = EmailMessage()
         msg['From'] = 'Quick Info '
-        msg['Subject'] = 'About Your Booking Status'
+        msg['Subject'] = 'Congratulations You have new patient - OP Request!'
         msg.set_content("Successfully placed your OP \n Thank you for Choosing Our Platform to Improve Your Health \n You will Receive an Conformation Mail from Doctor Shortly..")
         msg['To'] = email
         server.send_message(msg)
+        server.quit()
+        print(email+" Patient mail sent successfully")
+        # Doctor Notification
+
+        server = smtplib.SMTP('smtp.gmail.com',587)
+        server.starttls()
+        server.login('bashamasthan31@gmail.com','teqi qyea ovhm unek')
+        msg = EmailMessage()
+        msg['From'] = 'Quick Info '
+        msg['Subject'] = 'About Your Booking Status'
+        msg.set_content(f"You have a new patient appointment \n Name : "+ pname + " Sex: "+ gender +"\n Problem :" + problem + " \n Mobile : %d \n Gmail %s " %(mob,usr.email))
+        msg['To'] = demail
+        server.send_message(msg)
+        server.quit()
+
+        print(demail+" Doctor mail sent successfully")
         return redirect('/user_home/')
     doc = Doctor_data.objects.all()
     return render(request,'user_appointment.html',{'doc':doc})

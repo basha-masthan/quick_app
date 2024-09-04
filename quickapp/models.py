@@ -17,7 +17,7 @@ class Doctor_data(models.Model):
 class usrData(models.Model):
     username = models.CharField(max_length=20,primary_key=True,unique=True)
     name=models.CharField(max_length=30)
-    email = models.EmailField(max_length=30)
+    email = models.EmailField(max_length=40)
     mobile=models.IntegerField()
     password = models.CharField(max_length=30)
 
@@ -25,7 +25,7 @@ class usrData(models.Model):
 class user_appointment(models.Model):
     pusername=models.CharField(max_length=20,unique=True)
     gender = models.CharField(max_length=20)
-    demail = models.EmailField(max_length=30)
+    demail = models.EmailField(max_length=40)
     pname=models.CharField(max_length=30)
     page=models.IntegerField()
     problem=models.CharField( max_length=150)

@@ -72,12 +72,8 @@
                             </div>
                             <div class="modal-body">
 
-                                {% for i in apo %}
-                                {% if i.pname == usrs.pname %}
-                                  
+                             
                                 <h4>Patient Name: {{usrs.pname}}</h4>
-                                {% endif %}
-                                {% endfor %}
                                 
 
                                 <form action="/cmsg/" method="post"> 

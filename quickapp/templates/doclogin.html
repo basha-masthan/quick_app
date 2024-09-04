@@ -81,7 +81,7 @@
     <h2 id="form-title"> Doctor Login</h2>
 
     <form id="login-form" action="/doclogin/" method="post" class="active">
-        {%csrf_token%}
+        {% csrf_token %}
 
         <input type="text" id="login-username" name="email" placeholder="Email" required>
         <input type="password" id="login-password" name="password" placeholder="Password" required>
@@ -89,12 +89,7 @@
     </form><br>
     <a href="/Doctorreg">Register for New Account</a>
 
-    <form id="signup-form">
-        <input type="text" id="signup-username" name="username" placeholder="Username" required>
-        <input type="email" id="signup-email" name="email" placeholder="Email" required>
-        <input type="password" id="signup-password" name="password" placeholder="Password" required>
-        <button type="submit">Sign Up</button>
-    </form><br>
+   
     <!-- <div class="switcher" onclick="toggleForms()">Don't have an account? Sign up</div> -->
 </div>
 
