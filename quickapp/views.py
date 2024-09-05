@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
-import random
+
 import smtplib
 from email.message import EmailMessage
 

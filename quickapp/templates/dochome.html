@@ -10,22 +10,23 @@
 </head>
 <body>
     <h2 class="container  alert mt-3 text-center shadow alert-info bg-body-tertiary ">Hello Dr. <span class="text-uppercase">{{name}}</span>
-       <span class="float-end  btn" onclick="logout()">
-        <svg  xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" class="bi bi-box-arrow-right" viewBox="0 0 16 16">
+        <!-- <svg  xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" class="bi bi-box-arrow-right" viewBox="0 0 16 16">
             <path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/>
             <path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/>
-        </svg>
-       </span>
+        </svg> -->
     </h2>
+    <div class="" style="display: flex;text-align: end;justify-content: end;margin-right: 15%;margin-top: -4.4%;">
+        <span class="m-auto btn btn-primary" onclick="logout()" >Logout</span>
+    </div>
 
-    <div class="box">
+    <div class="box" style="margin-top: 4%;">
         <div class="up_box">
             <!--write code wellcome message and website info to doctor -->
-            <h1>Welcome Dr. {{ name }}</h1>
+            <!-- <h1>Welcome Dr. {{ name }}</h1>
             <p>We are here to help you manage your patients better.</p>
             <p>For more information, please visit our website: <a href="#">https://www.quickinfo.com</a></p>
             <p>Stay connected with us on social media: <a href="#">Facebook</a>, <a href="#">Twitter</a>, <a href="#">Instagram</a></p>
-             
+              -->
         </div>
         <div class="container">
             <!-- filter doctors -->
@@ -34,6 +35,7 @@
             <table class="table table-striped table-responsive">
               <thead>
                 <tr>
+                    <th>S.No</th>
                   <th>Name</th>
                   <th>Gender</th>
                   <th>Age</th>
@@ -44,11 +46,11 @@
                 </tr>
               </thead>
               <tbody>
-
                 {% for usrs in apo %}
                 {% if doc.email == usrs.demail %}
-                  
+                    
                 <tr>
+                    <td></td>
                     <td>{{usrs.pname}}</td>
                     <td>{{usrs.gender}}</td>
                     <td>{{usrs.page}}</td>
@@ -71,7 +73,7 @@
                                 </button>
                             </div>
                             <div class="modal-body">
-
+                               
                              
                                 <h4>Patient Name: {{usrs.pname}}</h4>
                                 
