@@ -34,4 +34,7 @@ urlpatterns = [
     path('cmsg/',cmsg),
     path("docgetdata/",docget_data , name="data"),
     path('logout/',logout_view),
+    path('save_coords/',save_coords,name='save_coords'),
+    path('triage/',triage,name='triage'),
+    path('search_videos/',search_videos,name='search_videos'),
 ]

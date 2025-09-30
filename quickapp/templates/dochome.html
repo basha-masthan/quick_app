@@ -1,116 +1,138 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Doctor Home</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
-</head>
-<body>
-    <h2 class="container  alert mt-3 text-center shadow alert-info bg-body-tertiary ">Hello Dr. <span class="text-uppercase">{{name}}</span>
-        <!-- <svg  xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" class="bi bi-box-arrow-right" viewBox="0 0 16 16">
-            <path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/>
-            <path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/>
-        </svg> -->
-    </h2>
-    <div class="" style="display: flex;text-align: end;justify-content: end;margin-right: 15%;margin-top: -4.4%;">
-        <span class="m-auto btn btn-primary" onclick="logout()" >Logout</span>
+{% extends 'base.html' %}
+{% block title %}Doctor Dashboard · Quick Info{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4 m-0">Hello, Dr. <span class="text-uppercase">{{ name }}</span></h2>
+    <a class="btn btn-outline-danger" href="/logout/">Logout</a>
+  </div>
+
+  <div class="row g-3 mb-3">
+    <div class="col-12 col-md-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="text-muted small">Today's Appointments</div>
+              <div class="fs-3 fw-bold">{% with total=0 %}{% for a in apo %}{% if a.demail == doc.email %}{% with total=total|add:1 %}{% endwith %}{% endif %}{% endfor %}{{ total }}{% endwith %}</div>
+            </div>
+            <i class="bi bi-calendar2-week fs-1 text-primary"></i>
+          </div>
+        </div>
+      </div>
     </div>
-
-    <div class="box" style="margin-top: 4%;">
-        <div class="up_box">
-            <!--write code wellcome message and website info to doctor -->
-            <!-- <h1>Welcome Dr. {{ name }}</h1>
-            <p>We are here to help you manage your patients better.</p>
-            <p>For more information, please visit our website: <a href="#">https://www.quickinfo.com</a></p>
-            <p>Stay connected with us on social media: <a href="#">Facebook</a>, <a href="#">Twitter</a>, <a href="#">Instagram</a></p>
-              -->
+    <div class="col-12 col-md-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <div class="text-muted small">Specialization</div>
+          <div class="fw-semibold">{{ doc.specialization }}</div>
+          <div class="text-muted">{{ doc.hospital }}</div>
         </div>
-        <div class="container">
-            <!-- filter doctors -->
-        </div>
-        <div class="container-fluid border"  style="height: 80vh;border:1px solid black;padding: 5px;margin: 5px;overflow: scroll;">
-            <table class="table table-striped table-responsive">
-              <thead>
-                <tr>
-                    <th>S.No</th>
-                  <th>Name</th>
-                  <th>Gender</th>
-                  <th>Age</th>
-                  <th>Problem</th>
-                  <th>Day</th>
-                  <th>Time</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for usrs in apo %}
-                {% if doc.email == usrs.demail %}
-                    
-                <tr>
-                    <td></td>
-                    <td>{{usrs.pname}}</td>
-                    <td>{{usrs.gender}}</td>
-                    <td>{{usrs.page}}</td>
-                    <td>
-                        <textarea  id="">{{usrs.problem}}</textarea>
-                  </td>
-                  <td>{{usrs.day}}</td>
-                  <td>{{usrs.time}} </td>
-                  <td>
-                      
-                      <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal" data-whatever="@getbootstrap">Accept</button>
-                      
-                        <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                        <div class="modal-dialog" role="document">
-                            <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="exampleModalLabel">Patient Details</h5>
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                                </button>
-                            </div>
-                            <div class="modal-body">
-                               
-                             
-                                <h4>Patient Name: {{usrs.pname}}</h4>
-                                
-
-                                <form action="/cmsg/" method="post"> 
-                                    {% csrf_token %}
-                                    <div class="form-group">
-                                        <label for="message-text" class="col-form-label">Message:</label>
-                                        <textarea class="form-control" name="msg" id="message-text" value="message"></textarea>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                        <input type="submit" name="" class="btn btn-primary" value="Submit" id="">
-                                    </div>
-                                </form>
-                            </div>
-                            </div>
-                        </div>
-                        </div>
-                      <div class="btn btn-secondary">Ignore</div>
-                    </td>
-                </tr>
-                {% endif %}
-                {% endfor %}
-
-              </tbody>
-            </table>
-        </div>
+      </div>
     </div>
-    
-    
-    
+    <div class="col-12 col-md-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <div class="text-muted small">Consultation Fee</div>
+          <div class="fw-bold">₹ {{ doc.price }}</div>
+          <div class="text-muted small">Address: {{ doc.address }}</div>
+          {% if doc.map_embed %}
+          <div class="ratio ratio-16x9 mt-2">
+            {{ doc.map_embed|safe }}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
 
-      <script>
-        function logout(){
-            window.location.href = "/logout/"; 
-        }
-      </script>
-</body>
-</html>
+  <div class="card shadow-sm">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+      <span class="fw-semibold">Patient Appointments</span>
+      <div class="input-group" style="width: 260px;">
+        <span class="input-group-text"><i class="bi bi-search"></i></span>
+        <input id="search" type="text" class="form-control" placeholder="Search patients...">
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table align-middle mb-0" id="apptTable">
+        <thead class="table-light">
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Gender</th>
+            <th>Age</th>
+            <th style="min-width:240px">Problem</th>
+            <th>Day</th>
+            <th>Time</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for usrs in apo %}
+          {% if doc.email == usrs.demail %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td class="fw-semibold">{{ usrs.pname }}</td>
+            <td>{{ usrs.gender }}</td>
+            <td>{{ usrs.page }}</td>
+            <td><div class="text-truncate" style="max-width: 320px;">{{ usrs.problem }}</div></td>
+            <td>{{ usrs.day }}</td>
+            <td>{{ usrs.time }}</td>
+            <td>
+              <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modal{{ forloop.counter }}">Accept</button>
+              <button class="btn btn-sm btn-outline-secondary">Ignore</button>
+
+              <div class="modal fade" id="modal{{ forloop.counter }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title">Patient Details</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                      <div class="mb-2"><strong>Name:</strong> {{ usrs.pname }}</div>
+                      <div class="mb-2"><strong>Gender:</strong> {{ usrs.gender }}</div>
+                      <div class="mb-2"><strong>Age:</strong> {{ usrs.page }}</div>
+                      <div class="mb-2"><strong>Problem:</strong> {{ usrs.problem }}</div>
+                      <form action="/cmsg/" method="post">
+                        {% csrf_token %}
+                        <label class="form-label">Message to patient</label>
+                        <textarea class="form-control" name="msg" rows="3" placeholder="Type a short confirmation or instructions..."></textarea>
+                        <div class="text-end mt-3">
+                          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                          <button type="submit" class="btn btn-primary">Send</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
+          {% endif %}
+          {% empty %}
+          <tr>
+            <td colspan="8" class="text-center text-muted py-4">No appointments yet.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+{% endblock %}
+{% block scripts %}
+<script>
+  const searchInput = document.getElementById('search');
+  const table = document.getElementById('apptTable');
+  if (searchInput && table) {
+    searchInput.addEventListener('input', function() {
+      const q = this.value.toLowerCase();
+      for (const row of table.tBodies[0].rows) {
+        const text = row.innerText.toLowerCase();
+        row.style.display = text.includes(q) ? '' : 'none';
+      }
+    });
+  }
+</script>
+{% endblock %}

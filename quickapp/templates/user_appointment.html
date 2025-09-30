@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}Book Appointment · Quick Info{% endblock %}
+{% block content %}
+<h2 class="h4 mb-3">Book Appointment</h2>
+<div class="alert alert-info">Are you booking for yourself? If not, fill details for the person you are booking for.</div>
+<form class="row g-3" action="/usr_appointments/" method="post">
+  {% csrf_token %}
+  <div class="col-md-6">
+    <label class="form-label">Choose Doctor</label>
+    <select class="form-select" name="demail" required>
+      <option value="">Choose a Doctor</option>
+      {% for doc in doc %}
+      <option value="{{ doc.email }}">Dr. {{ doc.fname }} {{ doc.lname }} - {{ doc.specialization }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-6">
+    <label class="form-label">Gender</label>
+    <div class="d-flex align-items-center gap-3">
+      <label class="form-check-label"><input class="form-check-input me-1" type="radio" name="gender" value="male"> Male</label>
+      <label class="form-check-label"><input class="form-check-input me-1" type="radio" name="gender" value="female"> Female</label>
+      <label class="form-check-label"><input class="form-check-input me-1" type="radio" name="gender" value="other"> Other</label>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <label class="form-label">Age</label>
+    <input class="form-control" type="number" name="page" required>
+  </div>
+  <div class="col-md-4">
+    <label class="form-label">Date</label>
+    <input class="form-control" type="date" name="date" required>
+  </div>
+  <div class="col-md-4">
+    <label class="form-label">Time</label>
+    <select class="form-select" name="time" required>
+      <option value="">Select time slot</option>
+      <option>07:00 AM to 09:00 AM</option>
+      <option>10:00 AM to 01:00 PM</option>
+      <option>03:00 PM to 05:00 PM</option>
+      <option>07:00 PM to 10:00 PM</option>
+    </select>
+  </div>
+  <div class="col-12">
+    <label class="form-label">Problem</label>
+    <textarea class="form-control" name="problem" rows="3" placeholder="Describe your problem" required></textarea>
+  </div>
+  <input type="hidden" name="pusername" value="{{ user.username }}">
+  <div class="col-12">
+    <div class="form-check">
+      <input class="form-check-input" type="checkbox" id="self" checked>
+      <label class="form-check-label" for="self">Booking for myself</label>
+    </div>
+  </div>
+  <div class="col-12">
+    <button class="btn btn-primary" type="submit">Submit</button>
+    <a class="btn btn-light" href="/user_home/">Cancel</a>
+  </div>
+</form>
+{% endblock %}
+

@@ -1,48 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="{% static "css/bm.css" %}">
-    <script src="{% static "js/bm.js" %}"></script>
-    <style>
-      body{
-        /* background-color: red; */
-        background-image: url('{% static "img/usrp-bg1.png" %}');
-        background-position: center center;
-        background-size: cover;
-      }
-    </style>
-  </head>
-<body>
-  <div class="box">
-    <div class="container">
-      <nav class="navbar navbar-collapse navbar-dark bg-dark alert">
-        <div class="col">
-          <div class="logo">
-            <a href="#" class="navbar-brand">Doctor's Hears</a>
-          </div>
-        </div>
-        <div class="col"></div>
-        <div class="col ">
-            <div class="col-3  float-end">
-              <div class="btn">
-                <span class="navbar-toggler-icon text-danger m-2"></span>
-              </div>
-            </div>
-        </div>
-      </nav>
-    </div>
-    <div class="b1">
-      <h1 class="navbar-brand text-center alert">Welcome Mr.{{user.username}} </h1>
-      <div class="bb1 col-4 border text-center m-auto" style="height: 30pc;">
-        <div class="txt"><p class="text-center alert">Course : {{user.cors}}</p></div>
-        <div class="img"></div>
-        <div class="info"><p>{{course.info}}</p></div>
-        <div class="price"><p>{{course.price}} </p></div>
-      </div>
-    </div>
-  </div>
-</body>
-</html>
+{% extends 'base.html' %}
+{% block title %}User Page · Quick Info{% endblock %}
+{% block content %}
+<div class="text-center">
+  <h1 class="h4">Welcome {{ user.username }}</h1>
+  <p class="text-muted">This page is under construction.</p>
+  <a class="btn btn-primary" href="/user_home/">Go to User Home</a>
+{% endblock %}

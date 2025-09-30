@@ -1,40 +1,354 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home</title> 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-    <style>
-        .bd{
-            background-image: url('https://wallpapers.com/images/hd/young-professional-in-healthcare-xf8zbt6dzes83ujq.jpg');
-            background-position: center;
-            background-size: cover;
-            height: 100vh;
-            width: 100vw;
-            display: flex;
-            flex-direction: column;
-            align-items: center;justify-content: center;
-        }
-        .mb{opacity: 0.7;
-            text-align: center;
-            width: fit-content;
-            height: max-content;
-        }
-    </style>
+{% extends 'base.html' %}
+{% block title %}Home · Quick Info{% endblock %}
+{% block content %}
+<section class="hero-med hero-img p-4 p-lg-5 mb-4 position-relative">
+  <div class="hero-overlay"></div>
+  <div class="cyber-grid"></div>
+  <div class="scanlines"></div>
+  <span class="float-shape float-a"></span>
+  <span class="float-shape float-b"></span>
+  <span class="float-shape float-c"></span>
+  <div class="row align-items-center g-4 hero-content">
+    <div class="col-12 col-lg-6">
+      <h1 class="display-6 fw-bold">Describe your health concern</h1>
+      <p class="opacity-75">In an emergency, call 112 immediately. For quick guidance, tell us what you're experiencing and we will triage and suggest next steps.</p>
+      <form action="/triage/" method="post" class="mt-3" id="triageForm">
+        {% csrf_token %}
+        <textarea class="form-control" name="q" id="symptomTextarea" rows="5" placeholder="e.g., Severe chest pain and shortness of breath for 10 minutes"></textarea>
+        <div class="d-flex gap-2 mt-3 flex-wrap">
+          <button class="btn btn-primary" type="submit"><i class="bi bi-cpu me-1"></i> Analyze</button>
+          <button class="btn btn-outline-primary" type="button" id="searchVideosBtn"><i class="bi bi-search me-1"></i> Search Videos</button>
+          <a class="btn btn-light" href="/user/"><i class="bi bi-box-arrow-in-right me-1"></i> Login</a>
+          <a class="btn btn-outline-secondary" href="/signup/"><i class="bi bi-person-plus me-1"></i> Create account</a>
+        </div>
+      </form>
+      {% if triage_action %}
+      <div class="alert mt-3 {% if triage_action == 'emergency' %}alert-danger{% elif triage_action == 'urgent' %}alert-warning{% elif triage_action == 'mental_health' %}alert-info{% else %}alert-secondary{% endif %}">
+        <div class="fw-semibold">
+          <i class="bi bi-{% if triage_action == 'emergency' %}exclamation-triangle{% elif triage_action == 'urgent' %}clock{% elif triage_action == 'mental_health' %}heart{% else %}info-circle{% endif %} me-2"></i>
+          Medical Assessment
+        </div>
+        <div class="mt-2">{{ triage_message }}</div>
+        
+        {% if immediate_actions %}
+        <div class="mt-3">
+          <div class="fw-semibold mb-2">Immediate Actions:</div>
+          <ul class="mb-0">
+            {% for action in immediate_actions %}
+            <li>{{ action }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+    <div class="col-12 col-lg-6">
+      <div class="row g-3">
+        <div class="col-12 col-md-6">
+          <div class="card card-med shadow-soft h-100 tilt">
+            <div class="card-body tilt-layer">
+              <div class="icon-circle mb-2"><i class="bi bi-thermometer-half"></i></div>
+              <div class="fw-semibold">General care</div>
+              <div class="text-muted small">Fever, cough, headaches and common issues</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-6">
+          <div class="card card-med shadow-soft h-100 tilt">
+            <div class="card-body tilt-layer">
+              <div class="icon-circle mb-2"><i class="bi bi-heart-pulse"></i></div>
+              <div class="fw-semibold">Urgent symptoms</div>
+              <div class="text-muted small">Chest pain, severe bleeding, breathing issues</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-6">
+          <div class="card card-med shadow-soft h-100 tilt">
+            <div class="card-body tilt-layer">
+              <div class="icon-circle mb-2"><i class="bi bi-brain"></i></div>
+              <div class="fw-semibold">Mental wellness</div>
+              <div class="text-muted small">Anxiety, depression, panic</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-6">
+          <div class="card card-med shadow-soft h-100 tilt">
+            <div class="card-body tilt-layer">
+              <div class="icon-circle mb-2"><i class="bi bi-geo-alt"></i></div>
+              <div class="fw-semibold">Nearby help</div>
+              <div class="text-muted small">Find suitable specialists and clinics</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
-</head>
-<div>
-<body>
-     <div class="bd">
-        <div class="mb container-fluid shadow shadow-lg bg-dark alert-danger  col-8 alert">
-            <h1 class="alert text-white fa-bolder" >WELCOME TO QUICK INFO </h1>
-         <a href="/user/"><button class="one alert alert-primary btn btn-primary">Are you a User ?</button></a><br>
-            <h4 class="text-white">Or</h4>
-         <a href="/doctor/" ><button class="two alert alert-info btn btn-secondary"> Are you a Doctor ? </button></a>
-         
-         </div>
-     </div>
-</body>
-</html>
+<section class="row g-3">
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h2 class="h5 mb-3">Suggested doctors</h2>
+        {% if triage_doctors %}
+          <div class="row g-2">
+            {% for d in triage_doctors %}
+            <div class="col-12 col-md-6 col-lg-4">
+              <div class="border rounded p-3 h-100">
+                <div class="fw-semibold">Dr. {{ d.fname }} {{ d.lname }}</div>
+                <div class="text-muted small">{{ d.specialization }} • {{ d.hospital }}</div>
+                <div class="text-muted small">{{ d.address }}</div>
+                <a class="btn btn-sm btn-primary mt-2" href="/user/">Login to book</a>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="text-muted">Enter your symptoms to see suggestions.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Dynamic Video Search Section -->
+<section class="row g-3 mt-4" id="videoSearchSection" style="display: none;">
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h2 class="h5 mb-0">
+            <i class="bi bi-play-circle me-2"></i>
+            Search Results
+          </h2>
+          <button class="btn btn-sm btn-outline-secondary" id="closeVideoSearch">
+            <i class="bi bi-x"></i>
+          </button>
+        </div>
+        <p class="text-muted small mb-3">Videos related to your search: <span id="searchQuery"></span></p>
+        <div class="row g-3" id="videoResults">
+          <!-- Videos will be loaded here dynamically -->
+        </div>
+        <div class="text-center mt-3" id="videoLoading" style="display: none;">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="text-muted mt-2">Searching for relevant videos...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Static Video Recommendations (from triage analysis) -->
+{% if video_recommendations %}
+<section class="row g-3 mt-4">
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h2 class="h5 mb-3">
+          <i class="bi bi-heart-pulse me-2"></i>
+          Recommended Videos
+        </h2>
+        <p class="text-muted small mb-3">Based on your symptoms, these videos provide relevant medical guidance.</p>
+        <div class="row g-3">
+          {% for video in video_recommendations %}
+          <div class="col-12 col-md-6 col-lg-4">
+            <div class="card video-card h-100">
+              <div class="position-relative">
+                <div class="ratio ratio-16x9">
+                  <iframe 
+                    src="https://www.youtube.com/embed/{{ video.video_id }}?rel=0&modestbranding=1&enablejsapi=1" 
+                    title="{{ video.title }}"
+                    allowfullscreen
+                    class="rounded-top"
+                    onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                  </iframe>
+                  <div class="d-flex align-items-center justify-content-center video-fallback rounded-top" style="display:none; height:100%;">
+                    <div class="text-center p-3">
+                      <i class="bi bi-play-circle" style="font-size: 3rem;"></i>
+                      <p class="text-muted mt-2">Video temporarily unavailable</p>
+                      <a href="https://www.youtube.com/watch?v={{ video.video_id }}" target="_blank" class="btn btn-sm btn-primary">
+                        <i class="bi bi-youtube me-1"></i>
+                        Watch on YouTube
+                      </a>
+                    </div>
+                  </div>
+                </div>
+                <div class="position-absolute top-0 end-0 m-2">
+                  <span class="badge bg-danger">
+                    <i class="bi bi-play-fill"></i>
+                  </span>
+                </div>
+              </div>
+              <div class="card-body">
+                <h6 class="card-title">{{ video.title }}</h6>
+                <p class="card-text text-muted small">{{ video.description }}</p>
+                <a href="https://www.youtube.com/watch?v={{ video.video_id }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                  <i class="bi bi-youtube me-1"></i>
+                  Watch on YouTube
+                </a>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchBtn = document.getElementById('searchVideosBtn');
+    const textarea = document.getElementById('symptomTextarea');
+    const videoSearchSection = document.getElementById('videoSearchSection');
+    const videoResults = document.getElementById('videoResults');
+    const videoLoading = document.getElementById('videoLoading');
+    const searchQuery = document.getElementById('searchQuery');
+    const closeBtn = document.getElementById('closeVideoSearch');
+
+    // Search videos button click handler
+    searchBtn.addEventListener('click', function() {
+        const query = textarea.value.trim();
+        if (!query) {
+            alert('Please enter your symptoms or health concern first.');
+            return;
+        }
+        
+        searchVideos(query);
+    });
+
+    // Close video search section
+    closeBtn.addEventListener('click', function() {
+        videoSearchSection.style.display = 'none';
+    });
+
+    // Search videos function
+    function searchVideos(query) {
+        // Show loading state
+        videoSearchSection.style.display = 'block';
+        videoLoading.style.display = 'block';
+        videoResults.innerHTML = '';
+        searchQuery.textContent = `"${query}"`;
+
+        // Make AJAX request
+        fetch('/search_videos/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: `query=${encodeURIComponent(query)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            videoLoading.style.display = 'none';
+            
+            if (data.error) {
+                videoResults.innerHTML = `
+                    <div class="col-12">
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Error: ${data.error}
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            if (data.videos.length === 0) {
+                videoResults.innerHTML = `
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            No videos found for your search. Try different keywords.
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            // Display videos
+            let videosHTML = '';
+            data.videos.forEach(video => {
+                videosHTML += `
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="card video-card h-100">
+                            <div class="position-relative">
+                                <div class="ratio ratio-16x9">
+                                    <iframe 
+                                        src="${video.embed_url}" 
+                                        title="${video.title}"
+                                        allowfullscreen
+                                        class="rounded-top"
+                                        onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                    </iframe>
+                                    <div class="d-flex align-items-center justify-content-center video-fallback rounded-top" style="display:none; height:100%;">
+                                        <div class="text-center p-3">
+                                            <i class="bi bi-play-circle" style="font-size: 3rem;"></i>
+                                            <p class="text-muted mt-2">Video temporarily unavailable</p>
+                                            <a href="${video.watch_url}" target="_blank" class="btn btn-sm btn-primary">
+                                                <i class="bi bi-youtube me-1"></i>
+                                                Watch on YouTube
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="position-absolute top-0 end-0 m-2">
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-play-fill"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <h6 class="card-title">${video.title}</h6>
+                                <p class="card-text text-muted small">${video.description}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">${video.channel_title}</small>
+                                    <a href="${video.watch_url}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-youtube me-1"></i>
+                                        Watch
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            videoResults.innerHTML = videosHTML;
+        })
+        .catch(error => {
+            videoLoading.style.display = 'none';
+            videoResults.innerHTML = `
+                <div class="col-12">
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Error searching for videos. Please try again.
+                    </div>
+                </div>
+            `;
+            console.error('Error:', error);
+        });
+    }
+
+    // Auto-search as user types (debounced)
+    let searchTimeout;
+    textarea.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            const query = textarea.value.trim();
+            if (query.length > 10) { // Only search if user has typed enough
+                // Optional: Auto-search as user types
+                // searchVideos(query);
+            }
+        }, 1000);
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}
