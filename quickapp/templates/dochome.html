@@ -3,122 +3,364 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2 class="h4 m-0">Hello, Dr. <span class="text-uppercase">{{ name }}</span></h2>
-    <a class="btn btn-outline-danger" href="/logout/">Logout</a>
-  </div>
+    <div>
+        <a class="btn btn-outline-danger" href="/logout/">Logout</a>
+    </div>
+</div>
 
-  <div class="row g-3 mb-3">
-    <div class="col-12 col-md-4">
-      <div class="card h-100 shadow-sm">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <div class="text-muted small">Today's Appointments</div>
-              <div class="fs-3 fw-bold">{% with total=0 %}{% for a in apo %}{% if a.demail == doc.email %}{% with total=total|add:1 %}{% endwith %}{% endif %}{% endfor %}{{ total }}{% endwith %}</div>
+<div class="row g-3 mb-3">
+    <div class="col-12 col-md-3">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small">Total Appointments</div>
+                        <div class="fs-3 fw-bold">{{ apo|length }}</div>
+                    </div>
+                    <i class="bi bi-calendar2-week fs-1 text-primary"></i>
+                </div>
             </div>
-            <i class="bi bi-calendar2-week fs-1 text-primary"></i>
-          </div>
         </div>
-      </div>
     </div>
-    <div class="col-12 col-md-4">
-      <div class="card h-100 shadow-sm">
-        <div class="card-body">
-          <div class="text-muted small">Specialization</div>
-          <div class="fw-semibold">{{ doc.specialization }}</div>
-          <div class="text-muted">{{ doc.hospital }}</div>
+    <div class="col-12 col-md-3">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small">Pending</div>
+                        <div class="fs-3 fw-bold text-warning">
+                            {% for a in apo %}{% if a.status == 'pending' %}{{ forloop.counter0|add:1 }}{% endif %}{% endfor %}
+                        </div>
+                    </div>
+                    <i class="bi bi-clock fs-1 text-warning"></i>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-    <div class="col-12 col-md-4">
-      <div class="card h-100 shadow-sm">
-        <div class="card-body">
-          <div class="text-muted small">Consultation Fee</div>
-          <div class="fw-bold">₹ {{ doc.price }}</div>
-          <div class="text-muted small">Address: {{ doc.address }}</div>
-          {% if doc.map_embed %}
-          <div class="ratio ratio-16x9 mt-2">
-            {{ doc.map_embed|safe }}
-          </div>
-          {% endif %}
+    <div class="col-12 col-md-3">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small">Accepted</div>
+                        <div class="fs-3 fw-bold text-success">
+                            {% for a in apo %}{% if a.status == 'accepted' %}{{ forloop.counter0|add:1 }}{% endif %}{% endfor %}
+                        </div>
+                    </div>
+                    <i class="bi bi-check-circle fs-1 text-success"></i>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
+    <div class="col-12 col-md-3">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <div class="text-muted small">Specialization</div>
+                <div class="fw-semibold">{{ doc.specialization }}</div>
+                <div class="text-muted">{{ doc.hospital }}</div>
+            </div>
+        </div>
+    </div>
+</div>
 
-  <div class="card shadow-sm">
+<div class="row g-3 mb-3">
+    <div class="col-12">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <div class="text-muted small">Consultation Fee</div>
+                <div class="fw-bold">₹ {{ doc.price }}</div>
+                <div class="text-muted small">Address: {{ doc.address }}</div>
+                {% if doc.map_embed %}
+                <div class="ratio ratio-21x9 mt-2" style="max-height: 200px;">
+                    {{ doc.map_embed|safe }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm">
     <div class="card-header bg-white d-flex justify-content-between align-items-center">
-      <span class="fw-semibold">Patient Appointments</span>
-      <div class="input-group" style="width: 260px;">
-        <span class="input-group-text"><i class="bi bi-search"></i></span>
-        <input id="search" type="text" class="form-control" placeholder="Search patients...">
-      </div>
+        <span class="fw-semibold">Patient Appointments</span>
+        <div class="input-group" style="width: 260px;">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input id="search" type="text" class="form-control" placeholder="Search patients...">
+        </div>
     </div>
     <div class="table-responsive">
-      <table class="table align-middle mb-0" id="apptTable">
-        <thead class="table-light">
-          <tr>
-            <th>#</th>
-            <th>Name</th>
-            <th>Gender</th>
-            <th>Age</th>
-            <th style="min-width:240px">Problem</th>
-            <th>Day</th>
-            <th>Time</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for usrs in apo %}
-          {% if doc.email == usrs.demail %}
-          <tr>
-            <td>{{ forloop.counter }}</td>
-            <td class="fw-semibold">{{ usrs.pname }}</td>
-            <td>{{ usrs.gender }}</td>
-            <td>{{ usrs.page }}</td>
-            <td><div class="text-truncate" style="max-width: 320px;">{{ usrs.problem }}</div></td>
-            <td>{{ usrs.day }}</td>
-            <td>{{ usrs.time }}</td>
-            <td>
-              <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modal{{ forloop.counter }}">Accept</button>
-              <button class="btn btn-sm btn-outline-secondary">Ignore</button>
-
-              <div class="modal fade" id="modal{{ forloop.counter }}" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog">
-                  <div class="modal-content">
-                    <div class="modal-header">
-                      <h5 class="modal-title">Patient Details</h5>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                      <div class="mb-2"><strong>Name:</strong> {{ usrs.pname }}</div>
-                      <div class="mb-2"><strong>Gender:</strong> {{ usrs.gender }}</div>
-                      <div class="mb-2"><strong>Age:</strong> {{ usrs.page }}</div>
-                      <div class="mb-2"><strong>Problem:</strong> {{ usrs.problem }}</div>
-                      <form action="/cmsg/" method="post">
-                        {% csrf_token %}
-                        <label class="form-label">Message to patient</label>
-                        <textarea class="form-control" name="msg" rows="3" placeholder="Type a short confirmation or instructions..."></textarea>
-                        <div class="text-end mt-3">
-                          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
-                          <button type="submit" class="btn btn-primary">Send</button>
+        <table class="table align-middle mb-0" id="apptTable">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Gender</th>
+                    <th>Age</th>
+                    <th style="min-width:240px">Problem</th>
+                    <th>Day</th>
+                    <th>Time</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for usrs in apo %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td class="fw-semibold">{{ usrs.pname }}</td>
+                    <td>{{ usrs.gender }}</td>
+                    <td>{{ usrs.page }}</td>
+                    <td><div class="text-truncate" style="max-width: 320px;">{{ usrs.problem }}</div></td>
+                    <td>{{ usrs.day|date:"M d, Y" }}</td>
+                    <td>{{ usrs.time }}</td>
+                    <td>
+                        <span class="badge {% if usrs.booking_type == 'self' %}bg-info{% else %}bg-success{% endif %}">
+                            {% if usrs.booking_type == 'self' %}Self{% else %}Others{% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge 
+                            {% if usrs.status == 'pending' %}bg-warning
+                            {% elif usrs.status == 'accepted' %}bg-success
+                            {% elif usrs.status == 'rejected' %}bg-danger
+                            {% elif usrs.status == 'ignored' %}bg-secondary
+                            {% elif usrs.status == 'completed' %}bg-info
+                            {% endif %}">
+                            {{ usrs.get_status_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            {% if usrs.status == 'pending' %}
+                                <button class="btn btn-sm btn-success" onclick="updateStatus({{ usrs.id }}, 'accepted')">Accept</button>
+                                <button class="btn btn-sm btn-secondary" onclick="updateStatus({{ usrs.id }}, 'ignored')">Ignore</button>
+                            {% endif %}
+                            {% if usrs.status == 'accepted' %}
+                                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#replyModal{{ usrs.id }}">Reply</button>
+                            {% endif %}
+                            <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#detailsModal{{ usrs.id }}">Details</button>
                         </div>
-                      </form>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </td>
-          </tr>
-          {% endif %}
-          {% empty %}
-          <tr>
-            <td colspan="8" class="text-center text-muted py-4">No appointments yet.</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+
+                        <!-- Reply Modal -->
+                        <div class="modal fade" id="replyModal{{ usrs.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content bg-white text-dark">
+                                    <div class="modal-header bg-primary text-white">
+                                        <h5 class="modal-title text-white">Reply to {{ usrs.pname }}</h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <form action="/doctor_reply/" method="post">
+                                        {% csrf_token %}
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <strong>Patient:</strong> {{ usrs.pname }}<br>
+                                                <strong>Problem:</strong> {{ usrs.problem }}<br>
+                                                <strong>Date:</strong> {{ usrs.day|date:"M d, Y" }} at {{ usrs.time }}
+                                            </div>
+                                            <hr>
+                                            <div class="mb-3">
+                                                <label class="form-label">Your Reply</label>
+                                                <textarea class="form-control" name="reply" rows="4" placeholder="Type your reply to the patient..." required></textarea>
+                                                <input type="hidden" name="appointment_id" value="{{ usrs.id }}">
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-primary">Send Reply</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Details Modal -->
+                        <div class="modal fade" id="detailsModal{{ usrs.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content bg-white text-dark">
+                                    <div class="modal-header bg-primary text-white">
+                                        <h5 class="modal-title text-white">Complete Patient Information</h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body bg-white text-dark">
+                                        <!-- Basic Information -->
+                                        <div class="row mb-4">
+                                            <div class="col-12">
+                                                <h6 class="text-primary border-bottom pb-2">Basic Information</h6>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <strong>Patient Name:</strong><br>
+                                                {{ usrs.pname }}<br><br>
+                                                
+                                                <strong>Age:</strong><br>
+                                                {{ usrs.page }}<br><br>
+                                                
+                                                <strong>Gender:</strong><br>
+                                                {{ usrs.gender|title }}<br><br>
+                                                
+                                                <strong>Booking Type:</strong><br>
+                                                <span class="badge {% if usrs.booking_type == 'self' %}bg-info{% else %}bg-success{% endif %}">
+                                                    {% if usrs.booking_type == 'self' %}Self Booking{% else %}For Someone Else{% endif %}
+                                                </span><br><br>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <strong>Appointment Date:</strong><br>
+                                                {{ usrs.day|date:"M d, Y" }}<br><br>
+                                                
+                                                <strong>Time Slot:</strong><br>
+                                                {{ usrs.time }}<br><br>
+                                                
+                                                <strong>Status:</strong><br>
+                                                <span class="badge 
+                                                    {% if usrs.status == 'pending' %}bg-warning
+                                                    {% elif usrs.status == 'accepted' %}bg-success
+                                                    {% elif usrs.status == 'rejected' %}bg-danger
+                                                    {% elif usrs.status == 'ignored' %}bg-secondary
+                                                    {% elif usrs.status == 'completed' %}bg-info
+                                                    {% endif %}">
+                                                    {{ usrs.get_status_display }}
+                                                </span><br><br>
+                                                
+                                                <strong>Booked On:</strong><br>
+                                                {{ usrs.created_at|date:"M d, Y g:i A" }}<br><br>
+                                            </div>
+                                        </div>
+
+                                        <!-- Contact Information -->
+                                        {% if usrs.booking_type == 'others' %}
+                                        <div class="row mb-4">
+                                            <div class="col-12">
+                                                <h6 class="text-primary border-bottom pb-2">Contact Information</h6>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <strong>Patient Email:</strong><br>
+                                                {{ usrs.patient_email|default:"Not provided" }}<br><br>
+                                                
+                                                <strong>Patient Mobile:</strong><br>
+                                                {{ usrs.patient_mobile|default:"Not provided" }}<br><br>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <strong>Date of Birth:</strong><br>
+                                                {{ usrs.patient_dob|default:"Not provided" }}<br><br>
+                                                
+                                                <strong>Address:</strong><br>
+                                                {{ usrs.address|default:"Not provided" }}<br><br>
+                                            </div>
+                                        </div>
+
+                                        <!-- Physical Information -->
+                                        <div class="row mb-4">
+                                            <div class="col-12">
+                                                <h6 class="text-primary border-bottom pb-2">Physical Information</h6>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <strong>Height:</strong><br>
+                                                {{ usrs.patient_height_cm|default:"Not provided" }} cm<br><br>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <strong>Weight:</strong><br>
+                                                {{ usrs.patient_weight_kg|default:"Not provided" }} kg<br><br>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <strong>Blood Group:</strong><br>
+                                                {{ usrs.patient_blood_group|default:"Not provided" }}<br><br>
+                                            </div>
+                                        </div>
+
+                                        <!-- Health Conditions -->
+                                        <div class="row mb-4">
+                                            <div class="col-12">
+                                                <h6 class="text-primary border-bottom pb-2">Health Conditions</h6>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="row">
+                                                    <div class="col-6">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" {% if usrs.diabetes %}checked{% endif %} disabled>
+                                                            <label class="form-check-label">Diabetes</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" {% if usrs.blood_pressure %}checked{% endif %} disabled>
+                                                            <label class="form-check-label">Blood Pressure</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" {% if usrs.cholesterol %}checked{% endif %} disabled>
+                                                            <label class="form-check-label">Cholesterol</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" {% if usrs.ulcer %}checked{% endif %} disabled>
+                                                            <label class="form-check-label">Ulcer</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" {% if usrs.heart_problem %}checked{% endif %} disabled>
+                                                            <label class="form-check-label">Heart Problem</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" {% if usrs.liver_problem %}checked{% endif %} disabled>
+                                                            <label class="form-check-label">Liver Problem</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" {% if usrs.brain_tumor %}checked{% endif %} disabled>
+                                                            <label class="form-check-label">Brain Tumor</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" {% if usrs.cancer_related %}checked{% endif %} disabled>
+                                                            <label class="form-check-label">Cancer Related</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <strong>Additional Symptoms:</strong><br>
+                                                <div class="bg-light p-3 rounded mt-2">
+                                                    {{ usrs.symptoms|default:"None provided"|linebreaks }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+
+                                        <!-- Problem Description -->
+                                        <div class="row mb-4">
+                                            <div class="col-12">
+                                                <h6 class="text-primary border-bottom pb-2">Problem Description</h6>
+                                                <div class="bg-light p-3 rounded mt-2">
+                                                    {{ usrs.problem|linebreaks }}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Doctor Reply Section -->
+                                        {% if usrs.doctor_reply %}
+                                        <div class="row mb-4">
+                                            <div class="col-12">
+                                                <h6 class="text-primary border-bottom pb-2">Your Previous Reply</h6>
+                                                <div class="bg-light p-3 rounded mt-2">
+                                                    {{ usrs.doctor_reply|linebreaks }}
+                                                </div>
+                                                <small class="text-muted">Replied on: {{ usrs.reply_date|date:"M d, Y g:i A" }}</small>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="10" class="text-center text-muted py-4">No appointments yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
-  </div>
+</div>
 
 {% endblock %}
 {% block scripts %}
@@ -133,6 +375,33 @@
         row.style.display = text.includes(q) ? '' : 'none';
       }
     });
+  }
+
+  function updateStatus(appointmentId, status) {
+    if (confirm(`Are you sure you want to ${status} this appointment?`)) {
+      const formData = new FormData();
+      formData.append('appointment_id', appointmentId);
+      formData.append('status', status);
+      formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+      fetch('/update_appointment_status/', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert(data.message);
+          location.reload(); // Reload to show updated status
+        } else {
+          alert('Error: ' + data.message);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while updating the appointment status.');
+      });
+    }
   }
 </script>
 {% endblock %}

@@ -1,0 +1,398 @@
+{% extends 'base.html' %}
+{% block title %}My Dashboard · Quick Info{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="h4 mb-0">My Dashboard</h2>
+                <div>
+                    <a href="/usr_appointments/" class="btn btn-primary me-2">Book New Appointment</a>
+                    <a href="/user_home/" class="btn btn-outline-secondary">Back to Home</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-2 col-sm-6 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3 class="card-title">{{ stats.total }}</h3>
+                    <p class="card-text">Total Appointments</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-sm-6 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <h3 class="card-title">{{ stats.pending }}</h3>
+                    <p class="card-text">Pending</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-sm-6 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3 class="card-title">{{ stats.accepted }}</h3>
+                    <p class="card-text">Accepted</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-sm-6 mb-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body text-center">
+                    <h3 class="card-title">{{ stats.rejected }}</h3>
+                    <p class="card-text">Rejected</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-sm-6 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h3 class="card-title">{{ stats.completed }}</h3>
+                    <p class="card-text">Completed</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Appointments List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">My Appointments</h5>
+                </div>
+                <div class="card-body">
+                    {% if appointments %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Patient Name</th>
+                                        <th>Date</th>
+                                        <th>Time</th>
+                                        <th>Doctor</th>
+                                        <th style="min-width:240px">Problem</th>
+                                        <th>Type</th>
+                                        <th>Status</th>
+                                        <th>Doctor Reply</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for appointment in appointments %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td class="fw-semibold">{{ appointment.pname }}</td>
+                                        <td>{{ appointment.day|date:"M d, Y" }}</td>
+                                        <td>{{ appointment.time }}</td>
+                                        <td class="fw-semibold">{{ appointment.demail }}</td>
+                                        <td><div class="text-truncate" style="max-width: 320px;">{{ appointment.problem }}</div></td>
+                                        <td>
+                                            <span class="badge {% if appointment.booking_type == 'self' %}bg-info{% else %}bg-success{% endif %}">
+                                                {% if appointment.booking_type == 'self' %}Self{% else %}Others{% endif %}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge 
+                                                {% if appointment.status == 'pending' %}bg-warning
+                                                {% elif appointment.status == 'accepted' %}bg-success
+                                                {% elif appointment.status == 'rejected' %}bg-danger
+                                                {% elif appointment.status == 'ignored' %}bg-secondary
+                                                {% elif appointment.status == 'completed' %}bg-info
+                                                {% endif %}">
+                                                {{ appointment.get_status_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if appointment.doctor_reply %}
+                                                <button class="btn btn-sm btn-outline-primary" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#replyModal{{ appointment.id }}">
+                                                    View Reply
+                                                </button>
+                                            {% else %}
+                                                <span class="text-muted">No reply yet</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-info" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#detailsModal{{ appointment.id }}">
+                                                Details
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No appointments found</h5>
+                            <p class="text-muted">You haven't booked any appointments yet.</p>
+                            <a href="/usr_appointments/" class="btn btn-primary">Book Your First Appointment</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reply Modals -->
+{% for appointment in appointments %}
+    {% if appointment.doctor_reply %}
+    <div class="modal fade" id="replyModal{{ appointment.id }}" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content bg-white text-dark">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title text-white">Doctor Reply</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body bg-white text-dark">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Patient Name:</strong><br>
+                            {{ appointment.pname }}<br><br>
+                            
+                            <strong>Booking Type:</strong><br>
+                            <span class="badge {% if appointment.booking_type == 'self' %}bg-info{% else %}bg-success{% endif %}">
+                                {% if appointment.booking_type == 'self' %}Self Booking{% else %}For Someone Else{% endif %}
+                            </span><br><br>
+                            
+                            <strong>Appointment Date:</strong><br>
+                            {{ appointment.day|date:"M d, Y" }}<br><br>
+                            
+                            <strong>Time:</strong><br>
+                            {{ appointment.time }}<br><br>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Doctor:</strong><br>
+                            {{ appointment.demail }}<br><br>
+                            
+                            <strong>Status:</strong><br>
+                            <span class="badge 
+                                {% if appointment.status == 'pending' %}bg-warning
+                                {% elif appointment.status == 'accepted' %}bg-success
+                                {% elif appointment.status == 'rejected' %}bg-danger
+                                {% elif appointment.status == 'ignored' %}bg-secondary
+                                {% elif appointment.status == 'completed' %}bg-info
+                                {% endif %}">
+                                {{ appointment.get_status_display }}
+                            </span><br><br>
+                            
+                            <strong>Booked On:</strong><br>
+                            {{ appointment.created_at|date:"M d, Y g:i A" }}<br><br>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    <strong>Problem Description:</strong><br>
+                    <div class="bg-light p-3 rounded mt-2">
+                        {{ appointment.problem|linebreaks }}
+                    </div>
+                    
+                    {% if appointment.doctor_reply %}
+                    <hr>
+                    <strong>Doctor's Reply:</strong><br>
+                    <div class="bg-light p-3 rounded mt-2">
+                        {{ appointment.doctor_reply|linebreaks }}
+                    </div>
+                    {% if appointment.reply_date %}
+                    <small class="text-muted">Replied on: {{ appointment.reply_date|date:"M d, Y g:i A" }}</small>
+                    {% endif %}
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Details Modal -->
+    <div class="modal fade" id="detailsModal{{ appointment.id }}" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content bg-white text-dark">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title text-white">Appointment Details</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body bg-white text-dark">
+                    <!-- Basic Information -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2">Basic Information</h6>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Patient Name:</strong><br>
+                            {{ appointment.pname }}<br><br>
+                            
+                            <strong>Age:</strong><br>
+                            {{ appointment.page }}<br><br>
+                            
+                            <strong>Gender:</strong><br>
+                            {{ appointment.gender|title }}<br><br>
+                            
+                            <strong>Booking Type:</strong><br>
+                            <span class="badge {% if appointment.booking_type == 'self' %}bg-info{% else %}bg-success{% endif %}">
+                                {% if appointment.booking_type == 'self' %}Self Booking{% else %}For Someone Else{% endif %}
+                            </span><br><br>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Appointment Date:</strong><br>
+                            {{ appointment.day|date:"M d, Y" }}<br><br>
+                            
+                            <strong>Time:</strong><br>
+                            {{ appointment.time }}<br><br>
+                            
+                            <strong>Status:</strong><br>
+                            <span class="badge 
+                                {% if appointment.status == 'pending' %}bg-warning
+                                {% elif appointment.status == 'accepted' %}bg-success
+                                {% elif appointment.status == 'rejected' %}bg-danger
+                                {% elif appointment.status == 'ignored' %}bg-secondary
+                                {% elif appointment.status == 'completed' %}bg-info
+                                {% endif %}">
+                                {{ appointment.get_status_display }}
+                            </span><br><br>
+                            
+                            <strong>Booked On:</strong><br>
+                            {{ appointment.created_at|date:"M d, Y g:i A" }}<br><br>
+                        </div>
+                    </div>
+
+                    <!-- Additional Information for Others Booking -->
+                    {% if appointment.booking_type == 'others' %}
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2">Patient Contact Information</h6>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Patient Email:</strong><br>
+                            {{ appointment.patient_email|default:"Not provided" }}<br><br>
+                            
+                            <strong>Patient Mobile:</strong><br>
+                            {{ appointment.patient_mobile|default:"Not provided" }}<br><br>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Date of Birth:</strong><br>
+                            {{ appointment.patient_dob|default:"Not provided" }}<br><br>
+                            
+                            <strong>Address:</strong><br>
+                            {{ appointment.address|default:"Not provided" }}<br><br>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2">Physical Information</h6>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Height:</strong><br>
+                            {{ appointment.patient_height_cm|default:"Not provided" }} cm<br><br>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Weight:</strong><br>
+                            {{ appointment.patient_weight_kg|default:"Not provided" }} kg<br><br>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Blood Group:</strong><br>
+                            {{ appointment.patient_blood_group|default:"Not provided" }}<br><br>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2">Health Conditions</h6>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" {% if appointment.diabetes %}checked{% endif %} disabled>
+                                        <label class="form-check-label">Diabetes</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" {% if appointment.blood_pressure %}checked{% endif %} disabled>
+                                        <label class="form-check-label">Blood Pressure</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" {% if appointment.cholesterol %}checked{% endif %} disabled>
+                                        <label class="form-check-label">Cholesterol</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" {% if appointment.ulcer %}checked{% endif %} disabled>
+                                        <label class="form-check-label">Ulcer</label>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" {% if appointment.heart_problem %}checked{% endif %} disabled>
+                                        <label class="form-check-label">Heart Problem</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" {% if appointment.liver_problem %}checked{% endif %} disabled>
+                                        <label class="form-check-label">Liver Problem</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" {% if appointment.brain_tumor %}checked{% endif %} disabled>
+                                        <label class="form-check-label">Brain Tumor</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" {% if appointment.cancer_related %}checked{% endif %} disabled>
+                                        <label class="form-check-label">Cancer Related</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Additional Symptoms:</strong><br>
+                            <div class="bg-light p-3 rounded mt-2">
+                                {{ appointment.symptoms|default:"None provided"|linebreaks }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Problem Description -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2">Problem Description</h6>
+                            <div class="bg-light p-3 rounded mt-2">
+                                {{ appointment.problem|linebreaks }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Doctor Reply -->
+                    {% if appointment.doctor_reply %}
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2">Doctor's Reply</h6>
+                            <div class="bg-light p-3 rounded mt-2">
+                                {{ appointment.doctor_reply|linebreaks }}
+                            </div>
+                            {% if appointment.reply_date %}
+                            <small class="text-muted">Replied on: {{ appointment.reply_date|date:"M d, Y g:i A" }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endfor %}
+
+{% endblock %}

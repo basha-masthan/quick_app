@@ -7,12 +7,44 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .triage_service import MedicalTriageService
 from .youtube_search import YouTubeSearchService
+from functools import wraps
+from django.db import models
 
 import smtplib
 from email.message import EmailMessage
 import os
 import requests
 from math import radians, sin, cos, asin, sqrt
+from django.utils import timezone
+
+# Custom decorators for session-based authentication
+def user_login_required(view_func):
+    """Decorator to ensure user is logged in"""
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        # Check for cross-access
+        if 'doc' in request.session:
+            messages.error(request, "You are logged in as a doctor. Please logout and login as a patient.")
+            return redirect('doctor')
+        if 'usr' not in request.session:
+            messages.error(request, "Please log in as a patient to access this page")
+            return redirect('user')
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+def doctor_login_required(view_func):
+    """Decorator to ensure doctor is logged in"""
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        # Check for cross-access
+        if 'usr' in request.session:
+            messages.error(request, "You are logged in as a patient. Please logout and login as a doctor.")
+            return redirect('user')
+        if 'doc' not in request.session:
+            messages.error(request, "Please log in as a doctor to access this page")
+            return redirect('doctor')
+        return view_func(request, *args, **kwargs)
+    return wrapper
 
 
 
@@ -141,6 +173,7 @@ def usrlog(request):
         return render(request,'user.html')
 
 
+@user_login_required
 def usr_log_session(request):
     doc= Doctor_data.objects.all()
     username = request.session['usr']
@@ -208,12 +241,11 @@ def usr_log_session(request):
     return render(request,'usrp.html',{'user':usr,'docd':suggested})
 
 
+@user_login_required
 def save_coords(request):
     if request.method == 'POST':
         try:
             username = request.session.get('usr')
-            if not username:
-                return redirect('user')
             usr = usrData.objects.get(username=username)
             lat = request.POST.get('lat')
             lon = request.POST.get('lon')
@@ -243,14 +275,18 @@ def doclogin(request):
             return redirect('doctor')   
     return render(request,'docregister.html')
 
+@doctor_login_required
 def dochome(request):
-    apo=user_appointment.objects.all()
     email = request.session['doc']
-    doc=Doctor_data.objects.get(email=email)
+    doc = Doctor_data.objects.get(email=email)
     fname = doc.fname
-    lname=doc.lname
-    name=fname+" "+lname
-    return render(request,'dochome.html',{'doc':doc,'name':name,'apo':apo})
+    lname = doc.lname
+    name = fname + " " + lname
+    
+    # Get appointments for this doctor (excluding ignored ones)
+    apo = user_appointment.objects.filter(demail=email).exclude(status='ignored').order_by('-created_at')
+    
+    return render(request, 'dochome.html', {'doc': doc, 'name': name, 'apo': apo})
 
 
 def Doctorreg(request):
@@ -293,7 +329,9 @@ def dodocreg(request):
         return redirect('/doctor/')
     return render(request,'home.html')
 
+@doctor_login_required
 def docget_data(request):
+    # Only show doctors to other doctors, not to patients
     All_data = Doctor_data.objects.all().filter()
     print(All_data)
     data = {
@@ -303,63 +341,333 @@ def docget_data(request):
 
 
 
+@user_login_required
 def usr_appointments(request):
-    username = request.session['usr']
-    usr=usrData.objects.get(username=username)
-    pname=usr.name
-    mob=usr.mobile
-    # str(mob)
+    try:
+        username = request.session['usr']
+        usr = usrData.objects.get(username=username)
+        pname = usr.name
+        mob = usr.mobile
+    except usrData.DoesNotExist:
+        messages.error(request, "User not found. Please log in again")
+        return redirect('user')
+    
     if request.method == 'POST':
-        page=request.POST['page']
-        date = request.POST['date']
-        time = request.POST['time']
-        gender=request.POST['gender']
-        demail=request.POST['demail']
-        pusername=request.POST['pusername']
-        problem = request.POST['problem']
-        appointment = user_appointment(demail=demail,pname=pname,day=date,time=time,gender=gender,problem=problem,page=page,pusername=pusername)
-        appointment.save()
-        email=usr.email
-        server = smtplib.SMTP('smtp.gmail.com',587)
-        server.starttls()
-        server.login('bashamasthan31@gmail.com','teqi qyea ovhm unek')
-        msg = EmailMessage()
-        msg['From'] = 'Quick Info '
-        msg['Subject'] = 'Congratulations You have new patient - OP Request!'
-        msg.set_content("Successfully placed your OP \n Thank you for Choosing Our Platform to Improve Your Health \n You will Receive an Conformation Mail from Doctor Shortly..")
-        msg['To'] = email
-        server.send_message(msg)
-        server.quit()
-        print(email+" Patient mail sent successfully")
-        # Doctor Notification
+        try:
+            # Get basic appointment details
+            page = request.POST['page']
+            date = request.POST['date']
+            time = request.POST['time']
+            gender = request.POST['gender']
+            demail = request.POST['demail']
+            pusername = request.POST['pusername']
+            problem = request.POST['problem']
+            booking_type = request.POST.get('booking_type', 'self')
+            booked_by = request.POST.get('booked_by', username)
+            
+            # Get patient name (can be different from logged-in user)
+            patient_name = request.POST.get('pname', pname)
+            
+            # Validate required fields
+            if not all([page, date, time, gender, demail, problem, patient_name]):
+                messages.error(request, "Please fill in all required fields")
+                return redirect('/usr_appointments/')
+            
+            # Create appointment with basic details
+            appointment = user_appointment(
+                booking_type=booking_type,
+                booked_by=booked_by,
+                demail=demail,
+                pname=patient_name,
+                day=date,
+                time=time,
+                gender=gender,
+                problem=problem,
+                page=page,
+                pusername=pusername if booking_type == 'self' else None
+            )
+            
+            # Add additional details for others booking
+            if booking_type == 'others':
+                appointment.patient_email = request.POST.get('patient_email')
+                appointment.patient_mobile = request.POST.get('patient_mobile') or None
+                appointment.patient_dob = request.POST.get('patient_dob') or None
+                appointment.patient_height_cm = request.POST.get('patient_height_cm') or None
+                appointment.patient_weight_kg = request.POST.get('patient_weight_kg') or None
+                appointment.patient_blood_group = request.POST.get('patient_blood_group')
+                appointment.address = request.POST.get('address')
+                appointment.symptoms = request.POST.get('symptoms')
+                
+                # Health conditions
+                appointment.diabetes = bool(request.POST.get('diabetes'))
+                appointment.blood_pressure = bool(request.POST.get('blood_pressure'))
+                appointment.cholesterol = bool(request.POST.get('cholesterol'))
+                appointment.ulcer = bool(request.POST.get('ulcer'))
+                appointment.heart_problem = bool(request.POST.get('heart_problem'))
+                appointment.liver_problem = bool(request.POST.get('liver_problem'))
+                appointment.brain_tumor = bool(request.POST.get('brain_tumor'))
+                appointment.cancer_related = bool(request.POST.get('cancer_related'))
+            else:
+                # For self booking, try to get data from user profile
+                try:
+                    profile = usr.profile
+                    appointment.diabetes = getattr(profile, 'diabetes', False)
+                    appointment.blood_pressure = getattr(profile, 'blood_pressure', False)
+                    appointment.cholesterol = getattr(profile, 'cholesterol', False)
+                    appointment.ulcer = getattr(profile, 'ulcer', False)
+                    appointment.heart_problem = getattr(profile, 'heart_problem', False)
+                    appointment.liver_problem = getattr(profile, 'liver_problem', False)
+                    appointment.brain_tumor = getattr(profile, 'brain_tumor', False)
+                    appointment.cancer_related = getattr(profile, 'cancer_related', False)
+                    appointment.symptoms = getattr(profile, 'symptoms', '')
+                    appointment.address = getattr(profile, 'address', '')
+                except:
+                    # If no profile exists, leave as default (False)
+                    pass
+            
+            appointment.save()
+            
+            # Send confirmation email to patient
+            try:
+                # Determine recipient email
+                if booking_type == 'self':
+                    recipient_email = usr.email
+                    recipient_name = usr.name
+                else:
+                    recipient_email = appointment.patient_email or usr.email
+                    recipient_name = patient_name
+                
+                server = smtplib.SMTP('smtp.gmail.com', 587)
+                server.starttls()
+                server.login('futurebound.tech@gmail.com', 'vhrb jdtk rdnt widx')
+                msg = EmailMessage()
+                msg['From'] = 'Quick Info'
+                msg['Subject'] = 'Appointment Booked Successfully - Quick Info'
+                msg.set_content(f"Dear {recipient_name},\n\nYour appointment has been successfully booked!\n\nAppointment Details:\n- Doctor: {demail}\n- Date: {date}\n- Time: {time}\n- Problem: {problem}\n\nYou will receive a confirmation from the doctor shortly.\n\nThank you for choosing Quick Info for your healthcare needs!")
+                msg['To'] = recipient_email
+                server.send_message(msg)
+                server.quit()
+                print(f"Patient email sent successfully to {recipient_email}")
+            except Exception as e:
+                print(f"Error sending patient email: {e}")
+            
+            # Send notification email to doctor
+            try:
+                server = smtplib.SMTP('smtp.gmail.com', 587)
+                server.starttls()
+                server.login('futurebound.tech@gmail.com', 'vhrb jdtk rdnt widx')
+                msg = EmailMessage()
+                msg['From'] = 'Quick Info'
+                msg['Subject'] = f'New Appointment Request - {patient_name}'
+                
+                # Create detailed email content
+                email_content = f"""You have a new patient appointment request:
 
-        server = smtplib.SMTP('smtp.gmail.com',587)
-        server.starttls()
-        server.login('bashamasthan31@gmail.com','teqi qyea ovhm unek')
-        msg = EmailMessage()
-        msg['From'] = 'Quick Info '
-        msg['Subject'] = 'About Your Booking Status'
-        msg.set_content(f"You have a new patient appointment \n Name : "+ pname + " Sex: "+ gender +"\n Problem :" + problem + " \n Mobile : %d \n Gmail %s " %(mob,usr.email))
-        msg['To'] = demail
-        server.send_message(msg)
-        server.quit()
+PATIENT DETAILS:
+- Name: {patient_name}
+- Age: {page}
+- Gender: {gender.title()}
+- Problem: {problem}
+- Date: {date}
+- Time: {time}
 
-        print(demail+" Doctor mail sent successfully")
-        return redirect('/user_home/')
+BOOKING INFORMATION:
+- Booked by: {usr.name} ({usr.email})
+- Booking type: {'Self' if booking_type == 'self' else 'For someone else'}
+
+"""
+                
+                # Add additional details for others booking
+                if booking_type == 'others':
+                    email_content += f"""ADDITIONAL PATIENT INFORMATION:
+- Email: {appointment.patient_email or 'Not provided'}
+- Mobile: {appointment.patient_mobile or 'Not provided'}
+- Date of Birth: {appointment.patient_dob or 'Not provided'}
+- Height: {appointment.patient_height_cm or 'Not provided'} cm
+- Weight: {appointment.patient_weight_kg or 'Not provided'} kg
+- Blood Group: {appointment.patient_blood_group or 'Not provided'}
+- Address: {appointment.address or 'Not provided'}
+
+HEALTH CONDITIONS:
+- Diabetes: {'Yes' if appointment.diabetes else 'No'}
+- Blood Pressure: {'Yes' if appointment.blood_pressure else 'No'}
+- Cholesterol: {'Yes' if appointment.cholesterol else 'No'}
+- Ulcer: {'Yes' if appointment.ulcer else 'No'}
+- Heart Problem: {'Yes' if appointment.heart_problem else 'No'}
+- Liver Problem: {'Yes' if appointment.liver_problem else 'No'}
+- Brain Tumor: {'Yes' if appointment.brain_tumor else 'No'}
+- Cancer Related: {'Yes' if appointment.cancer_related else 'No'}
+
+Additional Symptoms: {appointment.symptoms or 'None provided'}
+
+"""
+                else:
+                    email_content += f"""CONTACT INFORMATION:
+- Patient Email: {usr.email}
+- Patient Mobile: {usr.mobile}
+
+"""
+                
+                email_content += "Please log in to your dashboard to accept/ignore this appointment and provide your response."
+                
+                msg.set_content(email_content)
+                msg['To'] = demail
+                server.send_message(msg)
+                server.quit()
+                print(f"Doctor email sent successfully to {demail}")
+            except Exception as e:
+                print(f"Error sending doctor email: {e}")
+            
+            messages.success(request, "Appointment booked successfully!")
+            return redirect('/user_home/')
+            
+        except Exception as e:
+            messages.error(request, f"Error booking appointment: {str(e)}")
+            print(f"Appointment booking error: {e}")
+            return redirect('/usr_appointments/')
+    
+    # Get all doctors
     doc = Doctor_data.objects.all()
-    return render(request,'user_appointment.html',{'doc':doc})
+    
+    # Get selected doctor from URL parameter
+    selected_doctor_email = request.GET.get('doctor', '')
+    selected_doctor = None
+    if selected_doctor_email:
+        try:
+            selected_doctor = Doctor_data.objects.get(email=selected_doctor_email)
+        except Doctor_data.DoesNotExist:
+            selected_doctor = None
+    
+    return render(request, 'user_appointment.html', {
+        'doc': doc, 
+        'selected_doctor': selected_doctor,
+        'selected_doctor_email': selected_doctor_email
+    })
 
 
+@doctor_login_required
 def cmsg(request):
     if request.method == 'POST':
         msg = request.POST['msg']
+        # Handle message functionality here if needed
 
     return redirect('/dochome/')
 
+@doctor_login_required
+def update_appointment_status(request):
+    """Update appointment status (accept, reject, ignore)"""
+    if request.method == 'POST':
+        try:
+            appointment_id = request.POST.get('appointment_id')
+            status = request.POST.get('status')
+            
+            appointment = user_appointment.objects.get(id=appointment_id, demail=request.session['doc'])
+            appointment.status = status
+            appointment.save()
+            
+            return JsonResponse({'success': True, 'message': f'Appointment {status} successfully'})
+        except user_appointment.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Appointment not found'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+    
+    return JsonResponse({'success': False, 'message': 'Invalid request'})
+
+@doctor_login_required
+def doctor_reply(request):
+    """Doctor reply to appointment"""
+    if request.method == 'POST':
+        try:
+            appointment_id = request.POST.get('appointment_id')
+            reply = request.POST.get('reply')
+            
+            appointment = user_appointment.objects.get(id=appointment_id, demail=request.session['doc'])
+            appointment.doctor_reply = reply
+            appointment.reply_date = timezone.now()
+            appointment.status = 'accepted'  # Auto-accept when doctor replies
+            appointment.save()
+            
+            messages.success(request, "Reply sent successfully!")
+            return redirect('/dochome/')
+        except user_appointment.DoesNotExist:
+            messages.error(request, "Appointment not found")
+        except Exception as e:
+            messages.error(request, f"Error: {str(e)}")
+    
+    return redirect('/dochome/')
+
+@user_login_required
+def user_dashboard(request):
+    """User dashboard to view appointments and doctor replies"""
+    try:
+        username = request.session['usr']
+        usr = usrData.objects.get(username=username)
+        
+        # Get all appointments booked by this user (both self and others)
+        # Handle both old appointments (pusername) and new appointments (booked_by)
+        appointments = user_appointment.objects.filter(
+            models.Q(booked_by=username) | 
+            models.Q(pusername=username)
+        ).order_by('-created_at')
+        
+        # If no appointments found, check for legacy appointments and update them
+        if appointments.count() == 0:
+            # Check if there are any legacy appointments (empty booked_by and pusername)
+            legacy_appointments = user_appointment.objects.filter(booked_by='', pusername='')
+            if legacy_appointments.exists():
+                # Update legacy appointments with current user
+                legacy_appointments.update(booked_by=username, pusername=username)
+                # Get updated appointments
+                appointments = user_appointment.objects.filter(booked_by=username).order_by('-created_at')
+        
+        # Get appointment statistics
+        total_appointments = appointments.count()
+        pending_appointments = appointments.filter(status='pending').count()
+        accepted_appointments = appointments.filter(status='accepted').count()
+        rejected_appointments = appointments.filter(status='rejected').count()
+        completed_appointments = appointments.filter(status='completed').count()
+        
+        stats = {
+            'total': total_appointments,
+            'pending': pending_appointments,
+            'accepted': accepted_appointments,
+            'rejected': rejected_appointments,
+            'completed': completed_appointments,
+        }
+        
+        return render(request, 'user_dashboard.html', {
+            'user': usr,
+            'appointments': appointments,
+            'stats': stats
+        })
+    except usrData.DoesNotExist:
+        messages.error(request, "User not found")
+        return redirect('user')
+
 
 def logout_view(request):
+    # Clear both user and doctor sessions
+    if 'usr' in request.session:
+        del request.session['usr']
+    if 'doc' in request.session:
+        del request.session['doc']
     logout(request)
     return redirect('/')
+
+def unauthorized_access(request):
+    """Handle unauthorized access attempts"""
+    messages.error(request, "You don't have permission to access this page. Please log in with the correct account type.")
+    return redirect('/')
+
+def check_cross_access(request):
+    """Check if user is trying to access wrong type of account"""
+    if 'usr' in request.session and 'doc' in request.session:
+        # Both sessions exist, clear both and redirect
+        del request.session['usr']
+        del request.session['doc']
+        messages.error(request, "Session conflict detected. Please log in again.")
+        return redirect('/')
+    return None
 
 def search_videos(request):
     """AJAX endpoint for searching YouTube videos based on user input"""

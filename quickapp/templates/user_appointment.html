@@ -1,60 +1,303 @@
 {% extends 'base.html' %}
 {% block title %}Book Appointment · Quick Info{% endblock %}
 {% block content %}
-<h2 class="h4 mb-3">Book Appointment</h2>
-<div class="alert alert-info">Are you booking for yourself? If not, fill details for the person you are booking for.</div>
-<form class="row g-3" action="/usr_appointments/" method="post">
-  {% csrf_token %}
-  <div class="col-md-6">
-    <label class="form-label">Choose Doctor</label>
-    <select class="form-select" name="demail" required>
-      <option value="">Choose a Doctor</option>
-      {% for doc in doc %}
-      <option value="{{ doc.email }}">Dr. {{ doc.fname }} {{ doc.lname }} - {{ doc.specialization }}</option>
-      {% endfor %}
-    </select>
-  </div>
-  <div class="col-md-6">
-    <label class="form-label">Gender</label>
-    <div class="d-flex align-items-center gap-3">
-      <label class="form-check-label"><input class="form-check-input me-1" type="radio" name="gender" value="male"> Male</label>
-      <label class="form-check-label"><input class="form-check-input me-1" type="radio" name="gender" value="female"> Female</label>
-      <label class="form-check-label"><input class="form-check-input me-1" type="radio" name="gender" value="other"> Other</label>
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h4 mb-0">Book Appointment</h2>
+                </div>
+                <div class="card-body">
+                    <form id="appointmentForm" action="/usr_appointments/" method="post">
+                        {% csrf_token %}
+                        
+                        <!-- Booking Type Selection -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="mb-3">Who is this appointment for?</h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="card h-100">
+                                            <div class="card-body text-center">
+                                                <input type="radio" class="form-check-input" name="booking_type" value="self" id="booking_self" checked>
+                                                <label class="form-check-label w-100" for="booking_self">
+                                                    <i class="bi bi-person-fill fs-1 text-primary d-block mb-2"></i>
+                                                    <h6>For Myself</h6>
+                                                    <small class="text-muted">Use my registered information</small>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card h-100">
+                                            <div class="card-body text-center">
+                                                <input type="radio" class="form-check-input" name="booking_type" value="others" id="booking_others">
+                                                <label class="form-check-label w-100" for="booking_others">
+                                                    <i class="bi bi-people-fill fs-1 text-success d-block mb-2"></i>
+                                                    <h6>For Someone Else</h6>
+                                                    <small class="text-muted">Fill details for another person</small>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Doctor Selection -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <label class="form-label">Choose Doctor <span class="text-danger">*</span></label>
+                                {% if selected_doctor %}
+                                <div class="alert alert-info mb-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>Selected Doctor:</strong> Dr. {{ selected_doctor.fname }} {{ selected_doctor.lname }} - {{ selected_doctor.specialization }} (₹{{ selected_doctor.price }})
+                                        </div>
+                                        <a href="/usr_appointments/" class="btn btn-sm btn-outline-primary">Change Doctor</a>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                <select class="form-select" name="demail" required {% if selected_doctor %}style="display: none;"{% endif %}>
+                                    <option value="">Choose a Doctor</option>
+                                    {% for doc in doc %}
+                                    <option value="{{ doc.email }}" {% if doc.email == selected_doctor_email %}selected{% endif %}>Dr. {{ doc.fname }} {{ doc.lname }} - {{ doc.specialization }} (₹{{ doc.price }})</option>
+                                    {% endfor %}
+                                </select>
+                                {% if selected_doctor %}
+                                <input type="hidden" name="demail" value="{{ selected_doctor_email }}">
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Basic Information -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Patient Name <span class="text-danger">*</span></label>
+                                <input class="form-control" type="text" name="pname" id="pname" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Gender <span class="text-danger">*</span></label>
+                                <div class="d-flex align-items-center gap-3">
+                                    <label class="form-check-label"><input class="form-check-input me-1" type="radio" name="gender" value="male"> Male</label>
+                                    <label class="form-check-label"><input class="form-check-input me-1" type="radio" name="gender" value="female"> Female</label>
+                                    <label class="form-check-label"><input class="form-check-input me-1" type="radio" name="gender" value="other"> Other</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Age <span class="text-danger">*</span></label>
+                                <input class="form-control" type="number" name="page" id="page" min="1" max="120" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Date <span class="text-danger">*</span></label>
+                                <input class="form-control" type="date" name="date" id="date" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Time Slot <span class="text-danger">*</span></label>
+                                <select class="form-select" name="time" required>
+                                    <option value="">Select time slot</option>
+                                    <option>07:00 AM to 09:00 AM</option>
+                                    <option>10:00 AM to 01:00 PM</option>
+                                    <option>03:00 PM to 05:00 PM</option>
+                                    <option>07:00 PM to 10:00 PM</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Additional Information for Others Booking -->
+                        <div id="othersInfo" style="display: none;">
+                            <hr>
+                            <h6 class="text-primary mb-3">Additional Patient Information</h6>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Email Address</label>
+                                    <input class="form-control" type="email" name="patient_email" id="patient_email">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Mobile Number</label>
+                                    <input class="form-control" type="tel" name="patient_mobile" id="patient_mobile">
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Date of Birth</label>
+                                    <input class="form-control" type="date" name="patient_dob" id="patient_dob">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Height (cm)</label>
+                                    <input class="form-control" type="number" name="patient_height_cm" id="patient_height_cm" min="50" max="250">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Weight (kg)</label>
+                                    <input class="form-control" type="number" name="patient_weight_kg" id="patient_weight_kg" min="1" max="300">
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Blood Group</label>
+                                    <select class="form-select" name="patient_blood_group" id="patient_blood_group">
+                                        <option value="">Select Blood Group</option>
+                                        <option value="A+">A+</option>
+                                        <option value="A-">A-</option>
+                                        <option value="B+">B+</option>
+                                        <option value="B-">B-</option>
+                                        <option value="AB+">AB+</option>
+                                        <option value="AB-">AB-</option>
+                                        <option value="O+">O+</option>
+                                        <option value="O-">O-</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Address</label>
+                                    <input class="form-control" type="text" name="address" id="address" placeholder="Full address">
+                                </div>
+                            </div>
+
+                            <!-- Health Conditions -->
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <label class="form-label">Health Conditions (Check all that apply)</label>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="diabetes" id="diabetes">
+                                                <label class="form-check-label" for="diabetes">Diabetes</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="blood_pressure" id="blood_pressure">
+                                                <label class="form-check-label" for="blood_pressure">Blood Pressure</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="cholesterol" id="cholesterol">
+                                                <label class="form-check-label" for="cholesterol">Cholesterol</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="ulcer" id="ulcer">
+                                                <label class="form-check-label" for="ulcer">Ulcer</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="heart_problem" id="heart_problem">
+                                                <label class="form-check-label" for="heart_problem">Heart Problem</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="liver_problem" id="liver_problem">
+                                                <label class="form-check-label" for="liver_problem">Liver Problem</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="brain_tumor" id="brain_tumor">
+                                                <label class="form-check-label" for="brain_tumor">Brain Tumor</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="cancer_related" id="cancer_related">
+                                                <label class="form-check-label" for="cancer_related">Cancer Related</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <label class="form-label">Additional Symptoms</label>
+                                    <textarea class="form-control" name="symptoms" id="symptoms" rows="3" placeholder="Describe any additional symptoms or health concerns"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Problem Description -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <label class="form-label">Problem Description <span class="text-danger">*</span></label>
+                                <textarea class="form-control" name="problem" rows="4" placeholder="Describe the problem or symptoms in detail" required></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Hidden Fields -->
+                        <input type="hidden" name="pusername" id="pusername" value="{{ user.username }}">
+                        <input type="hidden" name="booked_by" value="{{ user.username }}">
+
+                        <!-- Submit Buttons -->
+                        <div class="row">
+                            <div class="col-12">
+                                <button class="btn btn-primary btn-lg" type="submit">
+                                    <i class="bi bi-calendar-check me-2"></i>Book Appointment
+                                </button>
+                                <a class="btn btn-outline-secondary btn-lg ms-2" href="/user_home/">
+                                    <i class="bi bi-arrow-left me-2"></i>Cancel
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-  <div class="col-md-4">
-    <label class="form-label">Age</label>
-    <input class="form-control" type="number" name="page" required>
-  </div>
-  <div class="col-md-4">
-    <label class="form-label">Date</label>
-    <input class="form-control" type="date" name="date" required>
-  </div>
-  <div class="col-md-4">
-    <label class="form-label">Time</label>
-    <select class="form-select" name="time" required>
-      <option value="">Select time slot</option>
-      <option>07:00 AM to 09:00 AM</option>
-      <option>10:00 AM to 01:00 PM</option>
-      <option>03:00 PM to 05:00 PM</option>
-      <option>07:00 PM to 10:00 PM</option>
-    </select>
-  </div>
-  <div class="col-12">
-    <label class="form-label">Problem</label>
-    <textarea class="form-control" name="problem" rows="3" placeholder="Describe your problem" required></textarea>
-  </div>
-  <input type="hidden" name="pusername" value="{{ user.username }}">
-  <div class="col-12">
-    <div class="form-check">
-      <input class="form-check-input" type="checkbox" id="self" checked>
-      <label class="form-check-label" for="self">Booking for myself</label>
-    </div>
-  </div>
-  <div class="col-12">
-    <button class="btn btn-primary" type="submit">Submit</button>
-    <a class="btn btn-light" href="/user_home/">Cancel</a>
-  </div>
-</form>
+</div>
 {% endblock %}
 
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const bookingTypeRadios = document.querySelectorAll('input[name="booking_type"]');
+    const othersInfo = document.getElementById('othersInfo');
+    const pnameField = document.getElementById('pname');
+    const pageField = document.getElementById('page');
+    
+    // Get user data from the template context
+    const userData = {
+        name: '{{ user.name }}',
+        // Add other user data as needed
+    };
+
+    function toggleOthersInfo() {
+        const isOthers = document.querySelector('input[name="booking_type"]:checked').value === 'others';
+        othersInfo.style.display = isOthers ? 'block' : 'none';
+        
+        if (!isOthers) {
+            // Clear others-specific fields when switching to self
+            document.querySelectorAll('#othersInfo input, #othersInfo select, #othersInfo textarea').forEach(field => {
+                field.value = '';
+                field.checked = false;
+            });
+        }
+    }
+
+    // Add event listeners
+    bookingTypeRadios.forEach(radio => {
+        radio.addEventListener('change', toggleOthersInfo);
+    });
+
+    // Set minimum date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('date').setAttribute('min', today);
+
+    // Initialize
+    toggleOthersInfo();
+    
+    // Handle Change Doctor button
+    const changeDoctorBtn = document.querySelector('a[href="/usr_appointments/"]');
+    if (changeDoctorBtn) {
+        changeDoctorBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            // Show the dropdown and hide the alert
+            const dropdown = document.querySelector('select[name="demail"]');
+            const alert = document.querySelector('.alert-info');
+            const hiddenInput = document.querySelector('input[type="hidden"][name="demail"]');
+            
+            if (dropdown) dropdown.style.display = 'block';
+            if (alert) alert.style.display = 'none';
+            if (hiddenInput) hiddenInput.remove();
+        });
+    }
+});
+</script>
+{% endblock %}

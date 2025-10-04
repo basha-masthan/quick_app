@@ -11,6 +11,42 @@
     {% block head %}{% endblock %}
     <style>
         .brand-gradient { background: linear-gradient(135deg,#2563eb,#22c55e); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        
+        /* Modal visibility fixes */
+        .modal-content {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+        }
+        
+        .modal-body {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+        }
+        
+        .modal-body strong {
+            color: #000000 !important;
+        }
+        
+        .modal-body .text-primary {
+            color: #0d6efd !important;
+        }
+        
+        .modal-body .text-muted {
+            color: #6c757d !important;
+        }
+        
+        .modal-body .bg-light {
+            background-color: #f8f9fa !important;
+            color: #000000 !important;
+        }
+        
+        .modal-body .form-check-label {
+            color: #000000 !important;
+        }
+        
+        .modal-body .badge {
+            color: #ffffff !important;
+        }
     </style>
 </head>
 <body class="bg-light">
@@ -23,8 +59,22 @@
             <div class="collapse navbar-collapse" id="nav">
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                     <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/user/">Login</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/signup/">Sign up</a></li>
+                    {% if request.session.usr %}
+                        <!-- User is logged in -->
+                        <li class="nav-item"><a class="nav-link" href="/user_home/">Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/user_dashboard/">My Appointments</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/usr_appointments/">Book Appointment</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/logout/">Logout</a></li>
+                    {% elif request.session.doc %}
+                        <!-- Doctor is logged in -->
+                        <li class="nav-item"><a class="nav-link" href="/dochome/">Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/logout/">Logout</a></li>
+                    {% else %}
+                        <!-- Not logged in -->
+                        <li class="nav-item"><a class="nav-link" href="/user/">Patient Login</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/doctor/">Doctor Login</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/signup/">Sign up</a></li>
+                    {% endif %}
                 </ul>
             </div>
         </div>
