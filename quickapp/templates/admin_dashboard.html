@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">Admin Dashboard</h2>
+            <a href="{% url 'admin_logout' %}" class="btn btn-danger mb-3">Logout</a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Doctors</h5>
+                    <h2>{{ doctors_count }}</h2>
+                    <a href="{% url 'admin_doctors' %}" class="btn btn-light">Manage</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Users</h5>
+                    <h2>{{ users_count }}</h2>
+                    <a href="{% url 'admin_users' %}" class="btn btn-light">Manage</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Total Appointments</h5>
+                    <h2>{{ appointments_count }}</h2>
+                    <a href="{% url 'admin_appointments' %}" class="btn btn-light">Manage</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-danger mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Pending Appointments</h5>
+                    <h2>{{ pending_appointments }}</h2>
+                    <a href="{% url 'admin_appointments' %}" class="btn btn-light">Manage</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

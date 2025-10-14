@@ -65,13 +65,13 @@ def triage(request):
         text = request.POST.get('q','')
         if not text.strip():
             return redirect('/')
-        
+
         # Initialize enhanced triage service
         triage_service = MedicalTriageService()
-        
+
         # Get enhanced NLP analysis
         triage_result = triage_service.analyze_symptoms(text)
-        
+
         # Get doctors filtered by suggested specialties
         doctors = Doctor_data.objects.all()
         if triage_result.suggested_specialties:
@@ -225,13 +225,24 @@ def usr_log_session(request):
                 if d.latitude is None or d.longitude is None:
                     return float('inf')
                 return haversine(plat, plon, d.latitude, d.longitude)
-            # compute distance and rough ETA (driving ~30km/h)
+            # compute distance and rough ETA with context-aware speed
             for d in suggested:
                 if d.latitude is not None and d.longitude is not None:
                     dist = doc_distance(d)
                     d.distance_km = round(dist, 1)
-                    avg_speed_kmh = 30.0
-                    d.eta_min = int(max(1, round((dist / avg_speed_kmh) * 60)))
+
+                    # Context-aware speed calculation
+                    if dist < 5:  # City driving
+                        avg_speed_kmh = 25.0
+                    elif dist < 50:  # Regional roads
+                        avg_speed_kmh = 45.0
+                    else:  # Highway
+                        avg_speed_kmh = 65.0
+
+                    # Add 10 minutes buffer for parking/appointment setup
+                    travel_time_min = (dist / avg_speed_kmh) * 60
+                    buffer_time_min = 10
+                    d.eta_min = int(max(1, round(travel_time_min + buffer_time_min)))
                 else:
                     d.distance_km = None
                     d.eta_min = None
@@ -439,6 +450,9 @@ def usr_appointments(request):
                 
                 server = smtplib.SMTP('smtp.gmail.com', 587)
                 server.starttls()
+                    
+                    # Gmail & App Password or OAuth2 token should be used here
+                
                 server.login('futurebound.tech@gmail.com', 'vhrb jdtk rdnt widx')
                 msg = EmailMessage()
                 msg['From'] = 'Quick Info'
@@ -455,6 +469,9 @@ def usr_appointments(request):
             try:
                 server = smtplib.SMTP('smtp.gmail.com', 587)
                 server.starttls()
+                
+                    # Gmail & App Password or OAuth2 token should be used here
+                
                 server.login('futurebound.tech@gmail.com', 'vhrb jdtk rdnt widx')
                 msg = EmailMessage()
                 msg['From'] = 'Quick Info'
@@ -698,4 +715,249 @@ def search_videos(request):
         except Exception as e:
             return JsonResponse({'videos': [], 'error': str(e)})
     
+# Admin views
+def admin_login(request):
+    if request.method == 'POST':
+        password = request.POST.get('password')
+        # Simple hardcoded password for demo - in production use proper auth
+        if password == 'admin123':
+            request.session['admin'] = True
+            return redirect('/admin_dashboard/')
+        else:
+            messages.error(request, "Invalid password")
+    return render(request, 'admin_login.html')
+
+def admin_logout(request):
+    if 'admin' in request.session:
+        del request.session['admin']
+    return redirect('/admin_login/')
+
+def admin_required(view_func):
+    """Decorator to ensure admin is logged in"""
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if 'admin' not in request.session:
+            messages.error(request, "Please log in as admin")
+            return redirect('/admin_login/')
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+@admin_required
+def admin_dashboard(request):
+    """Admin dashboard overview"""
+    doctors_count = Doctor_data.objects.count()
+    users_count = usrData.objects.count()
+    appointments_count = user_appointment.objects.count()
+    pending_appointments = user_appointment.objects.filter(status='pending').count()
+
+    context = {
+        'doctors_count': doctors_count,
+        'users_count': users_count,
+        'appointments_count': appointments_count,
+        'pending_appointments': pending_appointments,
+    }
+    return render(request, 'admin_dashboard.html', context)
+
+@admin_required
+def admin_doctors(request):
+    """List all doctors with CRUD operations"""
+    doctors = Doctor_data.objects.all()
+    return render(request, 'admin_doctors.html', {'doctors': doctors})
+
+@admin_required
+def admin_doctor_create(request):
+    """Create new doctor"""
+    if request.method == 'POST':
+        try:
+            address = request.POST['address']
+            lat = request.POST.get('latitude')
+            lng = request.POST.get('longitude')
+
+            # Geocode if lat/lng not provided
+            if not lat or not lng:
+                try:
+                    api_key = os.getenv('GOOGLE_MAPS_API_KEY')
+                    if api_key:
+                        resp = requests.get('https://maps.googleapis.com/maps/api/geocode/json', params={'address': address, 'key': api_key}, timeout=10)
+                        data = resp.json()
+                        if data.get('status') == 'OK':
+                            loc = data['results'][0]['geometry']['location']
+                            lat, lng = str(loc['lat']), str(loc['lng'])
+                except Exception:
+                    pass
+
+            doctor = Doctor_data(
+                fname=request.POST['fname'],
+                lname=request.POST['lname'],
+                gender=request.POST['gender'],
+                email=request.POST['email'],
+                mobile=int(request.POST['mobile']),
+                specialization=request.POST['specialization'],
+                hospital=request.POST['hospital'],
+                price=request.POST['price'],
+                address=address,
+                password=request.POST['password'],
+                latitude=float(lat) if lat else None,
+                longitude=float(lng) if lng else None,
+                map_embed=request.POST.get('map_embed'),
+            )
+            doctor.save()
+            messages.success(request, "Doctor created successfully")
+            return redirect('/admin_doctors/')
+        except Exception as e:
+            messages.error(request, f"Error creating doctor: {str(e)}")
+    return render(request, 'admin_doctor_form.html', {'action': 'create'})
+
+@admin_required
+def admin_doctor_edit(request, fname):
+    """Edit doctor"""
+    try:
+        doctor = Doctor_data.objects.get(fname=fname)
+    except Doctor_data.DoesNotExist:
+        messages.error(request, "Doctor not found")
+        return redirect('/admin_doctors/')
+
+    if request.method == 'POST':
+        try:
+            address = request.POST['address']
+            lat = request.POST.get('latitude')
+            lng = request.POST.get('longitude')
+
+            # Geocode if lat/lng not provided
+            if not lat or not lng:
+                try:
+                    api_key = os.getenv('GOOGLE_MAPS_API_KEY')
+                    if api_key:
+                        resp = requests.get('https://maps.googleapis.com/maps/api/geocode/json', params={'address': address, 'key': api_key}, timeout=10)
+                        data = resp.json()
+                        if data.get('status') == 'OK':
+                            loc = data['results'][0]['geometry']['location']
+                            lat, lng = str(loc['lat']), str(loc['lng'])
+                except Exception:
+                    pass
+
+            doctor.lname = request.POST['lname']
+            doctor.gender = request.POST['gender']
+            doctor.email = request.POST['email']
+            doctor.mobile = int(request.POST['mobile'])
+            doctor.specialization = request.POST['specialization']
+            doctor.hospital = request.POST['hospital']
+            doctor.price = request.POST['price']
+            doctor.address = address
+            doctor.password = request.POST['password']
+            doctor.latitude = float(lat) if lat else None
+            doctor.longitude = float(lng) if lng else None
+            doctor.map_embed = request.POST.get('map_embed')
+            doctor.save()
+            messages.success(request, "Doctor updated successfully")
+            return redirect('/admin_doctors/')
+        except Exception as e:
+            messages.error(request, f"Error updating doctor: {str(e)}")
+    return render(request, 'admin_doctor_form.html', {'doctor': doctor, 'action': 'edit'})
+
+@admin_required
+def admin_doctor_delete(request, fname):
+    """Delete doctor"""
+    try:
+        doctor = Doctor_data.objects.get(fname=fname)
+        doctor.delete()
+        messages.success(request, "Doctor deleted successfully")
+    except Doctor_data.DoesNotExist:
+        messages.error(request, "Doctor not found")
+    return redirect('/admin_doctors/')
+
+@admin_required
+def admin_users(request):
+    """List all users"""
+    users = usrData.objects.all()
+    return render(request, 'admin_users.html', {'users': users})
+
+@admin_required
+def admin_user_create(request):
+    """Create new user"""
+    if request.method == 'POST':
+        try:
+            user = usrData(
+                username=request.POST['username'],
+                name=request.POST['name'],
+                email=request.POST['email'],
+                mobile=int(request.POST['mobile']),
+                password=request.POST['password'],
+            )
+            user.save()
+            messages.success(request, "User created successfully")
+            return redirect('/admin_users/')
+        except Exception as e:
+            messages.error(request, f"Error creating user: {str(e)}")
+    return render(request, 'admin_user_form.html', {'action': 'create'})
+
+@admin_required
+def admin_user_edit(request, username):
+    """Edit user"""
+    try:
+        user = usrData.objects.get(username=username)
+    except usrData.DoesNotExist:
+        messages.error(request, "User not found")
+        return redirect('/admin_users/')
+
+    if request.method == 'POST':
+        try:
+            user.name = request.POST['name']
+            user.email = request.POST['email']
+            user.mobile = int(request.POST['mobile'])
+            user.password = request.POST['password']
+            user.save()
+            messages.success(request, "User updated successfully")
+            return redirect('/admin_users/')
+        except Exception as e:
+            messages.error(request, f"Error updating user: {str(e)}")
+    return render(request, 'admin_user_form.html', {'user': user, 'action': 'edit'})
+
+@admin_required
+def admin_user_delete(request, username):
+    """Delete user"""
+    try:
+        user = usrData.objects.get(username=username)
+        user.delete()
+        messages.success(request, "User deleted successfully")
+    except usrData.DoesNotExist:
+        messages.error(request, "User not found")
+    return redirect('/admin_users/')
+
+@admin_required
+def admin_appointments(request):
+    """List all appointments"""
+    appointments = user_appointment.objects.all().order_by('-created_at')
+    return render(request, 'admin_appointments.html', {'appointments': appointments})
+
+@admin_required
+def admin_appointment_edit(request, appointment_id):
+    """Edit appointment"""
+    try:
+        appointment = user_appointment.objects.get(id=appointment_id)
+    except user_appointment.DoesNotExist:
+        messages.error(request, "Appointment not found")
+        return redirect('/admin_appointments/')
+
+    if request.method == 'POST':
+        try:
+            appointment.status = request.POST['status']
+            appointment.doctor_reply = request.POST.get('doctor_reply')
+            appointment.save()
+            messages.success(request, "Appointment updated successfully")
+            return redirect('/admin_appointments/')
+        except Exception as e:
+            messages.error(request, f"Error updating appointment: {str(e)}")
+    return render(request, 'admin_appointment_form.html', {'appointment': appointment})
+
+@admin_required
+def admin_appointment_delete(request, appointment_id):
+    """Delete appointment"""
+    try:
+        appointment = user_appointment.objects.get(id=appointment_id)
+        appointment.delete()
+        messages.success(request, "Appointment deleted successfully")
+    except user_appointment.DoesNotExist:
+        messages.error(request, "Appointment not found")
+    return redirect('/admin_appointments/')
     return JsonResponse({'videos': [], 'error': 'Invalid request method'})

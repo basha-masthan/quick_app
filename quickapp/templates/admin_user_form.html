@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if action == 'create' %}Add User{% else %}Edit User{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-center">{% if action == 'create' %}Add New User{% else %}Edit User{% endif %}</h3>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" name="username" value="{% if user %}{{ user.username }}{% endif %}" {% if action == 'edit' %}readonly{% endif %} required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="name" name="name" value="{% if user %}{{ user.name }}{% endif %}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" value="{% if user %}{{ user.email }}{% endif %}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="mobile" class="form-label">Mobile</label>
+                            <input type="number" class="form-control" id="mobile" name="mobile" value="{% if user %}{{ user.mobile }}{% endif %}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" value="{% if user %}{{ user.password }}{% endif %}" required>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">{% if action == 'create' %}Create User{% else %}Update User{% endif %}</button>
+                        </div>
+                    </form>
+                    <div class="mt-3">
+                        <a href="{% url 'admin_users' %}" class="btn btn-secondary">Back to Users</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
