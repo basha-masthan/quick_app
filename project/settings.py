@@ -20,12 +20,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-h2svsg-f3a+=4)0mhq_4rw(+fl_^a)tkbun(v*!e7c4f+bxi7u'
+import os
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-h2svsg-f3a+=4)0mhq_4rw(+fl_^a)tkbun(v*!e7c4f+bxi7u')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') if os.environ.get('ALLOWED_HOSTS') else ['*']
 
 
 # Application definition
@@ -76,8 +77,12 @@ WSGI_APPLICATION = 'project.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('PGDATABASE', 'railway'),
+        'USER': os.environ.get('PGUSER', 'postgres'),
+        'PASSWORD': os.environ.get('PGPASSWORD', ''),
+        'HOST': os.environ.get('PGHOST', 'localhost'),
+        'PORT': os.environ.get('PGPORT', '5432'),
     }
 }
 
@@ -120,8 +125,21 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'quickapp' / 'static'
 ]
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Media files
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Railway specific settings
+if os.environ.get('RAILWAY_ENVIRONMENT'):
+    # Use Railway's static file serving
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+    # Add whitenoise middleware
+    MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
