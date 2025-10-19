@@ -93,6 +93,21 @@ if os.environ.get('DATABASE_URL'):
         conn_health_checks=True,
     )
 
+# Use MongoDB for production (Vercel)
+DATABASES = {
+    'default': {
+        'ENGINE': 'djongo',
+        'NAME': 'quickapp',
+        'CLIENT': {
+            'host': 'mongodb+srv://basha:king@freefire.lrfkfsu.mongodb.net/',
+            'username': 'basha',
+            'password': 'king',
+            'authSource': 'admin',
+            'authMechanism': 'SCRAM-SHA-1'
+        }
+    }
+}
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
