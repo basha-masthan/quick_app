@@ -8,7 +8,6 @@ class Doctor_data(models.Model):
     mobile=models.IntegerField()
     specialization = models.CharField(max_length=200)
     hospital = models.CharField(max_length=200)
-    mobile = models.IntegerField()
     price = models.CharField(max_length=10)
     address = models.CharField(max_length=500)
     password=models.CharField(max_length=30)
