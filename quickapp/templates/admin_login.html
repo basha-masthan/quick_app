@@ -16,19 +16,44 @@
                             <div class="alert alert-{{ message.tags }}">{{ message }}</div>
                         {% endfor %}
                     {% endif %}
-                    <form method="post">
+
+                    {% if not otp_sent %}
+                    <form method="post" id="password-form">
                         {% csrf_token %}
                         <div class="mb-3">
                             <label for="password" class="form-label">Password</label>
                             <input type="password" class="form-control" id="password" name="password" required>
                         </div>
                         <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">Login</button>
+                            <button type="submit" class="btn btn-primary">Send OTP</button>
                         </div>
                     </form>
+                    {% else %}
+                    <form method="post" id="otp-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="password" value="{{ password }}">
+                        <div class="mb-3">
+                            <label for="otp" class="form-label">Enter 5-digit OTP sent to official4basha@gmail.com</label>
+                            <input type="text" class="form-control" id="otp" name="otp" maxlength="5" pattern="[0-9]{5}" required>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success">Verify OTP</button>
+                        </div>
+                        <div class="text-center mt-3">
+                            <small class="text-muted">Didn't receive OTP? <a href="#" onclick="document.getElementById('password-form').style.display='block'; document.getElementById('otp-form').style.display='none';">Try again</a></small>
+                        </div>
+                    </form>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    // Auto-focus on OTP input when shown
+    {% if otp_sent %}
+    document.getElementById('otp').focus();
+    {% endif %}
+</script>
 {% endblock %}

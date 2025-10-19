@@ -719,13 +719,58 @@ def search_videos(request):
 def admin_login(request):
     if request.method == 'POST':
         password = request.POST.get('password')
-        # Simple hardcoded password for demo - in production use proper auth
-        if password == 'admin123':
-            request.session['admin'] = True
-            return redirect('/admin_dashboard/')
+        otp = request.POST.get('otp')
+
+        # Check password first
+        if password == 'iambasha':
+            if otp:
+                # Verify OTP
+                session_otp = request.session.get('admin_otp')
+                if session_otp and str(otp) == str(session_otp):
+                    # Clear OTP from session and login
+                    del request.session['admin_otp']
+                    request.session['admin'] = True
+                    messages.success(request, "Login successful!")
+                    return redirect('/admin_dashboard/')
+                else:
+                    messages.error(request, "Invalid OTP")
+                    return render(request, 'admin_login.html', {'otp_sent': True, 'password': password})
+            else:
+                # Send OTP
+                import random
+                otp_code = str(random.randint(10000, 99999))
+
+                try:
+                    import smtplib
+                    from email.message import EmailMessage
+
+                    server = smtplib.SMTP('smtp.gmail.com', 587)
+                    server.starttls()
+
+                    # Use your Gmail credentials
+                    server.login('vamsirock.2003@gmail.com', 'gltb yeyi ajjc ypny')
+
+                    msg = EmailMessage()
+                    msg['From'] = 'Quick Info Admin'
+                    msg['Subject'] = 'Admin Login OTP'
+                    msg.set_content(f'Your OTP for admin login is: {otp_code}\n\nThis OTP will expire in 5 minutes.')
+                    msg['To'] = 'official4basha@gmail.com'
+
+                    server.send_message(msg)
+                    server.quit()
+
+                    # Store OTP in session
+                    request.session['admin_otp'] = otp_code
+                    messages.success(request, "OTP sent to official4basha@gmail.com")
+                    return render(request, 'admin_login.html', {'otp_sent': True, 'password': password})
+
+                except Exception as e:
+                    messages.error(request, f"Failed to send OTP: {str(e)}")
+                    return render(request, 'admin_login.html')
         else:
             messages.error(request, "Invalid password")
-    return render(request, 'admin_login.html')
+
+    return render(request, 'admin_login.html', {'otp_sent': False})
 
 def admin_logout(request):
     if 'admin' in request.session:
