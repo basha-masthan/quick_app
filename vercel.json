@@ -17,5 +17,11 @@
   ],
   "env": {
     "DJANGO_SETTINGS_MODULE": "project.settings"
-  }
+  },
+  "functions": {
+    "vercel_app.py": {
+      "maxDuration": 30
+    }
+  },
+  "buildCommand": "python manage.py collectstatic --noinput && python manage.py migrate --run-syncdb"
 }
