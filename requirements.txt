@@ -1,4 +1,4 @@
-Django>=4.2.0,<4.3.0
+Django=
 psycopg2-binary==2.9.11
 requests==2.32.3
 gunicorn==21.2.0
