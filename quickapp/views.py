@@ -453,7 +453,7 @@ def usr_appointments(request):
                     
                     # Gmail & App Password or OAuth2 token should be used here
                 
-                server.login('futurebound.tech@gmail.com', 'vhrb jdtk rdnt widx')
+                server.login('vamsirock.2003@gmail.com', 'gltb yeyi ajjc ypny')
                 msg = EmailMessage()
                 msg['From'] = 'Quick Info'
                 msg['Subject'] = 'Appointment Booked Successfully - Quick Info'
@@ -472,7 +472,7 @@ def usr_appointments(request):
                 
                     # Gmail & App Password or OAuth2 token should be used here
                 
-                server.login('futurebound.tech@gmail.com', 'vhrb jdtk rdnt widx')
+                server.login('vamsirock.2003@gmail.com', 'gltb yeyi ajjc ypny')
                 msg = EmailMessage()
                 msg['From'] = 'Quick Info'
                 msg['Subject'] = f'New Appointment Request - {patient_name}'
