@@ -28,10 +28,9 @@ from django.core.management import execute_from_command_line
 try:
     from django.db import connection
     connection.ensure_connection()
+    print("Database connection successful")
 except Exception as e:
     print(f"Database connection error: {e}")
-    # For Vercel, we might need to run migrations if database is empty
-    try:
-        execute_from_command_line(['manage.py', 'migrate', '--run-syncdb'])
-    except:
-        pass
+    # For MongoDB with Djongo, we don't need traditional migrations
+    # The database schema is handled by the models themselves
+    pass

@@ -15,5 +15,5 @@
   "env": {
     "DJANGO_SETTINGS_MODULE": "project.settings"
   },
-  "buildCommand": "python manage.py collectstatic --noinput && python manage.py migrate --run-syncdb"
+  "buildCommand": "python manage.py collectstatic --noinput"
 }
