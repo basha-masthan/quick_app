@@ -78,11 +78,8 @@ WSGI_APPLICATION = 'project.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'djongo',
-        'NAME': 'freefire',
-        'CLIENT': {
-            'host': 'mongodb+srv://basha:king@freefire.lrfkfsu.mongodb.net/',
-        }
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
