@@ -1,14 +1,11 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "vercel_app.py",
-      "use": "@vercel/python",
-      "config": {
-        "maxLambdaSize": "15mb"
-      }
+  "functions": {
+    "vercel_app.py": {
+      "runtime": "python3.9",
+      "maxDuration": 30
     }
-  ],
+  },
   "routes": [
     {
       "src": "/(.*)",
@@ -17,11 +14,6 @@
   ],
   "env": {
     "DJANGO_SETTINGS_MODULE": "project.settings"
-  },
-  "functions": {
-    "vercel_app.py": {
-      "maxDuration": 30
-    }
   },
   "buildCommand": "python manage.py collectstatic --noinput && python manage.py migrate --run-syncdb"
 }
